@@ -11,7 +11,7 @@ import { FalAIModel } from "./models/FalAiModel";
 import cors from "cors";
 
 import dotenv from "dotenv";
-import { router as webhookRouter } from "./routes/webhook.routes";
+
 
 const IMAGE_GEN_CREDITS = 1;
 const TRAIN_MODEL_CREDITS = 20;
@@ -28,20 +28,7 @@ app.use(express.json());
 
 app.get("/pre-signed-url", async (req, res) => {
   const key = `models/${Date.now()}_${Math.random()}.zip`;
-  const url = S3Client.presign(key, {
-    method: "PUT",
-    accessKeyId: process.env.S3_ACCESS_KEY,
-    secretAccessKey: process.env.S3_SECRET_KEY,
-    endpoint: process.env.ENDPOINT,
-    bucket: process.env.BUCKET_NAME,
-    expiresIn: 60 * 5,
-    type: "application/zip",
-  });
 
-  res.json({
-    url,
-    key,
-  });
 });
 
 app.post("/ai/training", async (req, res) => {
