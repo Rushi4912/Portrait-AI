@@ -1,11 +1,11 @@
-import { BACKEND_URL } from "../next-env";
+// import { BACKEND_URL } from "../next-env";
 import { useEffect, useState } from "react";
 import { useAuth } from "./useAuth";
-import { creditUpdateEvent } from "@/hooks/usePayment";
+// import { creditUpdateEvent } from "@/hooks/usePayment";
 
 export function useCredits() {
     const { getToken } = useAuth();
-    const baseurl = BACKEND_URL;
+    const baseurl = "http://localhost:8080";
     const [credits, setCredits] = useState(0);
     const [loading, setLoading] = useState(true);
 
@@ -48,13 +48,13 @@ export function useCredits() {
         };
     
         // Use the creditUpdateEvent instead of window
-        creditUpdateEvent.addEventListener("creditUpdate", handleCreditUpdate);
+        // creditUpdateEvent.addEventListener("creditUpdate", handleCreditUpdate);
     
         // Refresh credits every minute
         const interval = setInterval(fetchCredits, 60 * 1000);
     
         return () => {
-            creditUpdateEvent.removeEventListener("creditUpdate", handleCreditUpdate);
+            // creditUpdateEvent.removeEventListener("creditUpdate", handleCreditUpdate);
             clearInterval(interval);
         };
     }, []);

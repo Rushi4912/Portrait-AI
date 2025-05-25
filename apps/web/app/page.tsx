@@ -1,15 +1,17 @@
- import {Button} from "../components/ui/button";
-const home = ()=>{
+"use client";
+import { Hero } from "@/components/home/Hero";
+import { useAuth } from "@/hooks/useAuth";
+import { redirect } from "next/navigation";
 
-  return(
 
-    <div >
-      <h1 className="text-3xl font-bold underline flex justify-center items-center">Hello world</h1>
-      <Button variant='default'>click me</Button>
+export default function Home() {
+  const { user } = useAuth();
+  if (user) {
+    redirect("/dashboard");
+  }
+  return (
+    <div>
+      <Hero />
     </div>
   );
-
 }
-
-
-export default home;

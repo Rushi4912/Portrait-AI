@@ -9,18 +9,21 @@ import { ThemeToggle } from "./ThemeToggle";
 
 export function Appbar() {
   return (
-    <div className="bg-black">
+    <div className="w-full">
       <motion.header
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="fixed top-0 z-50 w-full p-2"
       >
+        {/* Full-width background with blur */}
+        <div className="absolute inset-0 backdrop-blur-xl bg-background/50 border-b border-neutral-300 dark:border-neutral-900 shadow-lg" />
+        
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
-          className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 backdrop-blur-xl rounded-2xl bg-background/50 border border-neutral-300 dark:border-neutral-900 shadow-lg"
+          className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 relative"
         >
           <div className="flex h-16 items-center justify-between">
             {/* Logo */}
@@ -42,7 +45,7 @@ export function Appbar() {
                   <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
                 </svg>
                 <span className="hidden font-bold font-mono text-xl sm:inline-block">
-                  100<span className="text-pink-500">x</span>Photos
+                  Portrait<span className="text-pink-500">-</span>AI
                 </span>
               </Link>
             </motion.div>
