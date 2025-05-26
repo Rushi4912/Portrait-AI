@@ -12,47 +12,44 @@ import { ScrollIndicator } from "./ScrollIndicator";
 import { StatsSection } from "./StatsSection";
 import { PricingSection } from "./PricingSection";
 import { HowItWorks } from "./HowItWorks";
-// import { TrustedBy } from "./TrustedBy";
 
 export function Hero() {
   return (
-    <div className="dark:bg-black mt-100">
+    <div className="dark:bg-black">
       <div className="relative min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900 via-gray-900 to-black text-white overflow-hidden">
         <BackgroundEffects />
 
-        <div className="relative max-w-7xl mx-auto px-6 sm:px-10 lg:px-12 pt-40 pb-40">
+        <div className="relative max-w-7xl mx-auto px-6 sm:px-10 lg:px-12 pt-32 pb-24">
           <HeroHeader />
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.8 }}
-            className="mt-32"
+            className="mt-24"
           >
-          
-
             {/* Section: How It Works */}
-            <section className="relative py-32">
+            <section className="relative py-24">
               <HowItWorks />
             </section>
 
             {/* Section: Stats */}
-            <section className="relative py-32">
+            <section className="relative py-24">
               <StatsSection />
             </section>
 
             {/* Section: Features */}
-            <section id="features" className="relative py-32">
+            <section id="features" className="relative py-24">
               <Features />
             </section>
 
             {/* Section: Testimonials */}
-            <section className="relative py-32">
+            <section className="relative py-24">
               <Testimonials />
             </section>
 
             {/* Section: Pricing */}
-            <section className="relative py-32">
+            <section className="relative py-24">
               <PricingSection />
             </section>
 
@@ -61,11 +58,11 @@ export function Hero() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.8 }}
-              className="relative py-40"
+              className="relative py-24 md:py-32"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-red-500/20 blur-2xl" />
               <div className="relative text-center max-w-4xl mx-auto space-y-10">
-                <h2 className="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 dark:from-purple-400 dark:via-pink-500 dark:to-red-500 bg-clip-text text-transparent">
+                <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 dark:from-purple-400 dark:via-pink-500 dark:to-red-500 bg-clip-text text-transparent">
                   Start Your AI Portrait Journey Today
                 </h2>
                 <p className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto">
