@@ -86,7 +86,7 @@ export function PackCard(props: TPack & { selectedModelId: string }) {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Card className="group h-full overflow-hidden border bg-card hover:shadow-xl hover:shadow-primary/20 transition-all duration-300">
+          <Card className="group h-full overflow-hidden border bg-card hover:shadow-xl hover:shadow-primary/20 transition-all duration-300 mt-20">
             <CardHeader className="p-0">
               {images.length > 1 ? (
                 // Render Carousel if there are more than 2 images

@@ -28,48 +28,48 @@ export const features = [
   export const testimonials = [
     {
       text: "The quality of these AI portraits is absolutely incredible. They look better than my professional headshots!",
-      author: "Harkirat Singh",
+      author: "John Doe",
       role: "Founder",
       avatar:
-        "https://pbs.twimg.com/profile_images/1599003507415166977/pRYwiTo3_400x400.jpg",
+        "https://comicbook.com/wp-content/uploads/sites/4/2025/02/One-Piece-Luffy-Anime.jpeg",
     },
     {
       text: "We used this for our family portraits and the results were stunning. So much easier than a traditional photoshoot.",
-      author: "Yash Makhija",
+      author: "John Doe",
       role: "Developer",
       avatar:
-        "https://i.ibb.co/ZpvLpgf8/Whats-App-Image-2024-12-08-at-01-17-05.jpg",
+        "https://i.pinimg.com/236x/24/50/6d/24506d71d06e5c15f325555ce64f1514.jpg",
     },
     {
       text: "Game-changer for my professional brand. The variety of styles and quick delivery is unmatched.",
-      author: "Sargam Poduel",
-      role: "Founder of WebCraft",
+      author: "John Doe",
+      role: "Founder",
       avatar:
-        "https://media.licdn.com/dms/image/v2/D5603AQH9LnII_HXrHQ/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1698821079941?e=2147483647&v=beta&t=1XGvRit2_LVRAtb-8y_e9mbtqXF102Ia_fX88-OvEI0",
+        "https://static1.cbrimages.com/wordpress/wp-content/uploads/2020/11/haikyuu-hinata-gleeful.jpg?q=50&fit=crop&w=825&dpr=1.5",
     },
   ];
   
   export const carouselImages = [
     {
-      url: "https://r2-us-west.photoai.com/1739277231-0b2465581e9551abecd467b163d0d48a-1.png",
+      url: "https://i.pinimg.com/236x/24/50/6d/24506d71d06e5c15f325555ce64f1514.jpg",
       title: "Professional Portrait",
       description: "Perfect for LinkedIn and business profiles",
       style: "Corporate",
     },
     {
-      url: "https://r2-us-west.photoai.com/1739273789-920e7410ef180855f9a5718d1e37eb3a-1.png",
+      url: "https://comicbook.com/wp-content/uploads/sites/4/2025/02/One-Piece-Luffy-Anime.jpeg",
       title: "Casual Lifestyle",
       description: "Natural and relaxed everyday portraits",
       style: "Casual",
     },
     {
-      url: "https://r2-us-west.photoai.com/1739273783-9effbeb7239423cba9629e7dd06f3565-1.png",
+      url: "https://static1.cbrimages.com/wordpress/wp-content/uploads/2020/11/haikyuu-hinata-gleeful.jpg?q=50&fit=crop&w=825&dpr=1.5",
       title: "Creative Portrait",
       description: "Artistic shots with unique lighting",
       style: "Creative",
     },
     {
-      url: "https://r2-us-west.photoai.com/1738861046-1175c64ebe0ecfe10b857e205b3b4a1e-3.png",
+      url: "https://comicbook.com/wp-content/uploads/sites/4/2024/12/Jujutsu-Kaisen-Satoru-Gojo.jpeg",
       title: "Fashion Portrait",
       description: "High-end fashion inspired photography",
       style: "Fashion",

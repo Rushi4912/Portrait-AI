@@ -1,7 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     images: {
-      domains: ['r2-us-west.photoai.com'],
+      domains: [
+        'i.pinimg.com',
+      'static1.cbrimages.com',
+      'comicbook.com',
+      
+      ],
     },
   };
   

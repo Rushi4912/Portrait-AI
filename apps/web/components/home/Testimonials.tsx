@@ -10,20 +10,20 @@ export function Testimonials() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.8, duration: 0.8 }}
-      className="mt-32"
+      className="mt-20"
     >
-      <h2 className="text-4xl font-bold text-center mb-4 bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
+      <h2 className="text-4xl font-bold text-center mb-20">
         Loved by Creators
       </h2>
-      <p className="text-muted-foreground text-center mb-12 text-lg">
+      <p className="text-muted-foreground text-center mb-32 text-lg">
         Join thousands of satisfied users who have transformed their portraits
       </p>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-32">
         {testimonials.map((testimonial, index) => (
           <motion.div
             key={index}
             whileHover={{ y: -10 }}
-            className="p-6 rounded-2xl bg-white/5 backdrop-blur-sm relative border border-muted-foreground/10 group dark:hover:bg-white/10 hover:bg-pink-50 transition-all duration-300"
+            className="p-12 rounded-2xl bg-white/5 backdrop-blur-sm relative border border-muted-foreground/10 group dark:hover:bg-white/10 hover:bg-pink-50 transition-all duration-300"
           >
             <div className="absolute -top-6 left-6">
               <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-purple-500">
@@ -48,3 +48,4 @@ export function Testimonials() {
     </motion.div>
   );
 }
+

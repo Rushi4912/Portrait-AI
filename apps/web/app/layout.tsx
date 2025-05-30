@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { Appbar } from "@/components/Appbar";
+import { Providers } from "../app/providers/Providers";
+import { Footer } from "@/components/Footer";
 
 import {
   ClerkProvider,
@@ -35,11 +37,14 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en" className="h-full">
         <body className={`${geistSans.variable} ${geistMono.variable} h-full`}>
+          <Providers>
           <Appbar />
-          {/* Add padding to prevent content overlap */}
-          <main className="pt-20 min-h-full"> {/* Adjust pt-20 based on your navbar height */}
+          {/* Increased padding-top to prevent navbar overlap */}
+          <main className="pt-24 min-h-full">
             {children}
           </main>
+          <Footer />
+          </Providers>
         </body>
       </html>
     </ClerkProvider>

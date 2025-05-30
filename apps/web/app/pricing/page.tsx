@@ -51,40 +51,41 @@ export default function SubscriptionPage() {
   ] as const;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12">
+    <div className="min-h-screen flex flex-col items-center px-4 py-16 md:py-24 ">
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 25 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="max-w-4xl text-center"
+        className="max-w-4xl w-full text-center mb-12 md:mb-16"
       >
-        <h1 className="text-4xl font-extrabold tracking-tight mb-4 text-gray-900 dark:text-white">
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-4 text-gray-900 dark:text-white mt-20">
           Choose Your Plan
         </h1>
-        <p className="text-lg text-gray-600 dark:text-gray-400">
+        <p className="text-base md:text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
           Find the perfect plan for your needs. Every plan includes access to
           our core features.
         </p>
       </motion.div>
 
       <motion.div
-        className="grid md:grid-cols-2 gap-8 mt-10"
+        className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 w-full max-w-5xl"
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4, delay: 0.2 }}
       >
         {plans.map((plan) => (
-          <PlanCard
-            key={plan.type}
-            plan={{
-              type: plan.type,
-              name: plan.name,
-              price: plan.price,
-              credits: plan.credits,
-              features: [...plan.features],
-            }}
-            onSelect={() => handlePlanSelect(plan.type)}
-          />
+          <div key={plan.type} className="flex justify-center">
+            <PlanCard
+              plan={{
+                type: plan.type,
+                name: plan.name,
+                price: plan.price,
+                credits: plan.credits,
+                features: [...plan.features],
+              }}
+              onSelect={() => handlePlanSelect(plan.type)}
+            />
+          </div>
         ))}
       </motion.div>
     </div>
