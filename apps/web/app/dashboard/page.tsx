@@ -1,6 +1,6 @@
 import { GenerateImage } from "@/components/GenerateImage";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Train } from "@/components/Train";
+// import { Train } from "@/components/Train";
 import { Packs } from "@/components/Packs";
 import { Camera } from "@/components/Camera";
 import { redirect } from "next/navigation";
@@ -62,13 +62,13 @@ export default async function DashboardPage() {
               value="packs"
               className="mt-0 focus-visible:outline-none"
             >
-              <Packs />
+              {/* <Packs /> */}
             </TabsContent>
             <TabsContent
               value="train"
               className="mt-0 focus-visible:outline-none"
             >
-              <Train />
+              {/* <Train /> */}
             </TabsContent>
           </div>
         </Tabs>

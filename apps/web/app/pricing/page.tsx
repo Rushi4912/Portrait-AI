@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { PlanCard } from "@/components/subscription/PlanCard";
-import { PlanType } from "@/types";
-import { usePayment } from "@/hooks/usePayment";
+import { PlanCard } from "../../components/subscription/PlanCard";
+import { PlanType } from "../../types";
+import { usePayment } from "../../hooks/usePayment";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 
