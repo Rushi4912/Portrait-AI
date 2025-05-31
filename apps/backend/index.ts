@@ -5,7 +5,7 @@ import {
   GenerateImage,
   GenerateImagesFromPack,
 } from "common/types";
-import { prismaClient } from "db";
+import { prismaClient } from "../../packages/db";
 // import { S3Client } from "bun";
 import { FalAIModel } from "./models/FalAiModel";
 import cors from "cors";
@@ -24,22 +24,57 @@ const falAiModel = new FalAIModel();
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 
-app.get("/pre-signed-url", async (req, res) => {
-  const key = `models/${Date.now()}_${Math.random()}.zip`;
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error(err.stack);
+  res.status(500).json({ message: 'Something broke!' });
+});
 
+const authMiddleware = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  try {
+    const userId = req.headers['user-id'];
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+    req.userId = userId as string;
+    next();
+  } catch (error) {
+    res.status(401).json({ message: 'Authentication failed' });
+  }
+};
+
+app.use('/ai', authMiddleware);
+app.use('/pack', authMiddleware);
+app.use('/models', authMiddleware);
+app.use('/image', authMiddleware);
+
+app.get("/pre-signed-url", async (req, res) => {
+  try {
+    const key = `models/${Date.now()}_${Math.random()}.zip`;
+    res.json({ key });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to generate pre-signed URL' });
+  }
 });
 
 app.post("/ai/training", async (req, res) => {
   try {
     const parsedBody = TrainModel.safeParse(req.body);
     if (!parsedBody.success) {
-      res.status(411).json({
-        message: "Input incorrect",
+      return res.status(400).json({
+        message: "Invalid input",
         error: parsedBody.error,
       });
-      return;
+    }
+
+    const credits = await prismaClient.userCredit.findUnique({ userId: req.userId! });
+
+    if ((credits?.amount ?? 0) < TRAIN_MODEL_CREDITS) {
+      return res.status(402).json({
+        message: "Not enough credits",
+      });
     }
 
     const { request_id, response_url } = await falAiModel.trainModel(
@@ -58,6 +93,7 @@ app.post("/ai/training", async (req, res) => {
         userId: req.userId!,
         zipUrl: parsedBody.data.zipUrl,
         falAiRequestId: request_id,
+        trainingStatus: "Pending",
       },
     });
 
@@ -255,133 +291,104 @@ app.get("/models", async (req, res) => {
 });
 
 app.post("/fal-ai/webhook/train", async (req, res) => {
-  console.log("====================Received training webhook====================");
-  console.log("Received training webhook:", req.body);
-  const requestId = req.body.request_id as string;
-
-  // First find the model to get the userId
-  const model = await prismaClient.model.findFirst({
-    where: {
-      falAiRequestId: requestId,
-    },
-  });
-
-  console.log("Found model:", model);
-
-  if (!model) {
-    console.error("No model found for requestId:", requestId);
-    res.status(404).json({ message: "Model not found" });
-    return;
-  }
-
-  // Handle error case
-  if (req.body.status === "ERROR") {
-    console.error("Training error:", req.body.error);
-    await prismaClient.model.updateMany({
-      where: {
-        falAiRequestId: requestId,
-      },
-      data: {
-        trainingStatus: "Failed",
-      },
-    });
-    
-    res.json({
-      message: "Error recorded",
-    });
-    return;
-  }
-
-  // Check for both "COMPLETED" and "OK" status
-  if (req.body.status === "COMPLETED" || req.body.status === "OK") {
-    try {
-      // Check if we have payload data directly in the webhook
-      let loraUrl;
-      if (req.body.payload && req.body.payload.diffusers_lora_file && req.body.payload.diffusers_lora_file.url) {
-        // Extract directly from webhook payload
-        loraUrl = req.body.payload.diffusers_lora_file.url;
-        console.log("Using lora URL from webhook payload:", loraUrl);
-      } else {
-        // Fetch result from fal.ai if not in payload
-        console.log("Fetching result from fal.ai");
-        const result = await fal.queue.result("fal-ai/flux-lora-fast-training", {
-          requestId,
-        });
-        console.log("Fal.ai result:", result);
-        const resultData = result.data as any;
-        loraUrl = resultData.diffusers_lora_file.url;
-      }
-
-      // check if the user has enough credits
-      const credits = await prismaClient.userCredit.findUnique({
-        where: {
-          userId: model.userId,
-        },
-      });
-
-      console.log("User credits:", credits);
-
-      if ((credits?.amount ?? 0) < TRAIN_MODEL_CREDITS) {
-        console.error("Not enough credits for user:", model.userId);
-        res.status(411).json({
-          message: "Not enough credits",
-        });
-        return;
-      }
-
-      console.log("Generating preview image with lora URL:", loraUrl);
-      const { imageUrl } = await falAiModel.generateImageSync(loraUrl);
-
-      console.log("Generated preview image:", imageUrl);
-
-      await prismaClient.model.updateMany({
-        where: {
-          falAiRequestId: requestId,
-        },
-        data: {
-          trainingStatus: "Generated",
-          tensorPath: loraUrl,
-          thumbnail: imageUrl,
-        },
-      });
-
-      await prismaClient.userCredit.update({
-        where: {
-          userId: model.userId,
-        },
-        data: {
-          amount: { decrement: TRAIN_MODEL_CREDITS },
-        },
-      });
-
-      console.log("Updated model and decremented credits for user:", model.userId);
-    } catch (error) {
-      console.error("Error processing webhook:", error);
-      await prismaClient.model.updateMany({
-        where: {
-          falAiRequestId: requestId,
-        },
-        data: {
-          trainingStatus: "Failed",
-        },
-      });
+  try {
+    const requestId = req.body.request_id;
+    if (!requestId) {
+      return res.status(400).json({ message: "Missing request_id" });
     }
-  } else {
-    // For any other status, keep it as Pending
-    console.log("Updating model status to: Pending");
-    await prismaClient.model.updateMany({
-      where: {
-        falAiRequestId: requestId,
-      },
-      data: {
-        trainingStatus: "Pending",
-      },
-    });
-  }
 
-  res.json({
-    message: "Webhook processed successfully",
-  });
+    const model = await prismaClient.model.findFirst({
+      where: { falAiRequestId: requestId },
+    });
+
+    if (!model) {
+      return res.status(404).json({ message: "Model not found" });
+    }
+
+    switch (req.body.status) {
+      case "ERROR":
+        await prismaClient.model.update({
+          where: { id: model.id },
+          data: { trainingStatus: "Failed" },
+        });
+        break;
+
+      case "COMPLETED":
+      case "OK":
+        let loraUrl;
+        if (req.body.payload && req.body.payload.diffusers_lora_file && req.body.payload.diffusers_lora_file.url) {
+          loraUrl = req.body.payload.diffusers_lora_file.url;
+          console.log("Using lora URL from webhook payload:", loraUrl);
+        } else {
+          console.log("Fetching result from fal.ai");
+          const result = await fal.queue.result("fal-ai/flux-lora-fast-training", {
+            requestId,
+          });
+          console.log("Fal.ai result:", result);
+          const resultData = result.data as any;
+          loraUrl = resultData.diffusers_lora_file.url;
+        }
+
+        const credits = await prismaClient.userCredit.findUnique({
+          where: {
+            userId: model.userId,
+          },
+        });
+
+        console.log("User credits:", credits);
+
+        if ((credits?.amount ?? 0) < TRAIN_MODEL_CREDITS) {
+          console.error("Not enough credits for user:", model.userId);
+          res.status(411).json({
+            message: "Not enough credits",
+          });
+          return;
+        }
+
+        console.log("Generating preview image with lora URL:", loraUrl);
+        const { imageUrl } = await falAiModel.generateImageSync(loraUrl);
+
+        console.log("Generated preview image:", imageUrl);
+
+        await prismaClient.model.updateMany({
+          where: {
+            falAiRequestId: requestId,
+          },
+          data: {
+            trainingStatus: "Generated",
+            tensorPath: loraUrl,
+            thumbnail: imageUrl,
+          },
+        });
+
+        await prismaClient.userCredit.update({
+          where: {
+            userId: model.userId,
+          },
+          data: {
+            amount: { decrement: TRAIN_MODEL_CREDITS },
+          },
+        });
+
+        console.log("Updated model and decremented credits for user:", model.userId);
+        break;
+
+      default:
+        await prismaClient.model.updateMany({
+          where: {
+            falAiRequestId: requestId,
+          },
+          data: {
+            trainingStatus: "Pending",
+          },
+        });
+    }
+
+    res.json({ message: "Webhook processed successfully" });
+  } catch (error) {
+    console.error("Error processing webhook:", error);
+    res.status(500).json({ message: "Webhook processing failed" });
+  }
 });
 
 app.post("/fal-ai/webhook/image", async (req, res) => {
@@ -461,9 +468,14 @@ app.get("/model/status/:modelId",  async (req, res) => {
   }
 });
 
-
 app.use("/api/webhook", webhookRouter);
+
+app.use((req, res) => {
+  res.status(404).json({ message: 'Route not found' });
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+}).on('error', (err) => {
+  console.error('Server failed to start:', err);
 });
