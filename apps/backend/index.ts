@@ -76,6 +76,7 @@ app.post("/ai/training", async (req, res) => {
         message: "Not enough credits",
       });
     }
+   
 
     const { request_id, response_url } = await falAiModel.trainModel(
       parsedBody.data.zipUrl,
