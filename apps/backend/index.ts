@@ -5,20 +5,21 @@ import {
   GenerateImage,
   GenerateImagesFromPack,
 } from "common/types";
-import { prismaClient } from "db";
-import { S3Client } from "@aws-sdk/client-s3";
+import { prismaClient } from "../../packages/db";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { FalAIModel } from "./models/FalAIModel";
 import cors from "cors";
 import { authMiddleware } from "./middleware";
 import dotenv from "dotenv";
+dotenv.config();
 
-import paymentRoutes from "./routes/payment.routes";
+import paymentRoutes from "../backend/routes/payment.routes";
 import { router as webhookRouter } from "./routes/webhook.routes";
 
 const IMAGE_GEN_CREDITS = 1;
 const TRAIN_MODEL_CREDITS = 20;
 
-dotenv.config();
 
 const PORT = process.env.PORT || 8080;
 
@@ -27,7 +28,7 @@ const falAiModel = new FalAIModel();
 const app = express();
 app.use(
   cors({
-    origin: ["https://photo.100xdevs.com", "http://localhost:3000"],
+    origin: true,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -37,20 +38,25 @@ app.use(express.json());
 
 app.get("/pre-signed-url", async (req, res) => {
   const key = `models/${Date.now()}_${Math.random()}.zip`;
-  const url = S3Client.presign(key, {
-    method: "PUT",
-    accessKeyId: process.env.S3_ACCESS_KEY,
-    secretAccessKey: process.env.S3_SECRET_KEY,
-    endpoint: process.env.ENDPOINT,
-    bucket: process.env.BUCKET_NAME,
-    expiresIn: 60 * 5,
-    type: "application/zip",
+  const s3 = new S3Client({
+    region: process.env.S3_REGION,
+    credentials: {
+      accessKeyId: process.env.S3_ACCESS_KEY!,
+      secretAccessKey: process.env.S3_SECRET_KEY!,
+    },
+    endpoint: process.env.ENDPOINT, // optional, only if using custom endpoint
+    forcePathStyle: !!process.env.ENDPOINT, // needed for some S3-compatible storage
   });
 
-  res.json({
-    url,
-    key,
+  const command = new PutObjectCommand({
+    Bucket: process.env.BUCKET_NAME!,
+    Key: key,
+    ContentType: "application/zip",
   });
+
+  const url = await getSignedUrl(s3, command, { expiresIn: 60 * 5 });
+
+  res.json({ url, key });
 });
 
 app.post("/ai/training", authMiddleware, async (req, res) => {

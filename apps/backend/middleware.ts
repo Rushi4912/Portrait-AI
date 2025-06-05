@@ -85,7 +85,7 @@ export async function authMiddleware(
       res.status(403).json({
         message: "Invalid token",
         details:
-          process.env.NODE_ENV === "development" ? error.message : undefined,
+          process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
       });
       return;
     }

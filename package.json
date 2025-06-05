@@ -2,16 +2,18 @@
   "name": "portrait-ai",
   "private": true,
   "scripts": {
-    "build": "turbo run build",
-    "dev": "turbo run dev",
-    "lint": "turbo run lint",
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types"
+    "start:web": "cd ./apps/web && npm run start",
+    "start:backend": "cd ./apps/backend && npm run start",
+    "generate:db": "cd ./packages/db && npx prisma generate && cd ../.."
   },
   "devDependencies": {
-    "prettier": "^3.5.3",
-    "turbo": "^2.5.3",
-    "typescript": "5.8.2"
+    "prettier": "^3.5.0",
+    "turbo": "^2.4.1",
+    "typescript": "5.7.3"
   },
   "engines": {
     "node": ">=18"

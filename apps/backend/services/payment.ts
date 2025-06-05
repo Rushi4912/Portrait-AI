@@ -2,12 +2,13 @@ import Stripe from "stripe";
 import Razorpay from "razorpay";
 import { prismaClient } from "db";
 import crypto from "crypto";
-import { PlanType } from "@prisma/client";
+// import { PlanType } from "@prisma/client";
 
 // Validate environment variables
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
 const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
+type PlanType = "basic" | "premium";
 
 if (!STRIPE_SECRET_KEY) {
   console.error("Missing STRIPE_SECRET_KEY");
@@ -20,7 +21,7 @@ if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
 // Initialize payment providers
 const stripe = STRIPE_SECRET_KEY
   ? new Stripe(STRIPE_SECRET_KEY, {
-      apiVersion: "2025-01-27.acacia",
+       apiVersion: "2025-05-28.basil",
     })
   : null;
 

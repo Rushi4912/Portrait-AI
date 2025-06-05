@@ -1,22 +1,16 @@
 import express from "express";
 import { authMiddleware } from "../middleware";
-import { PlanType } from "@prisma/client";
 import { prismaClient } from "db";
-import Stripe from "stripe";
 import {
-  createStripeSession,
   createRazorpayOrder,
-  verifyStripePayment,
-  getStripeSession,
   verifyRazorpaySignature,
   createSubscriptionRecord,
   PaymentService,
 } from "../services/payment";
 
+type PlanType = "basic" | "premium";
+
 const router = express.Router();
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-01-27.acacia",
-});
 
 router.post(
   "/create",
@@ -51,29 +45,6 @@ router.post(
         return;
       }
 
-      if (method === "stripe") {
-        try {
-          const session = await createStripeSession(
-            userId,
-            plan as "basic" | "premium",
-            userEmail
-          );
-          console.log("Stripe session created:", session);
-          res.json({ sessionId: session.id });
-          return;
-        } catch (error) {
-          console.error("Stripe session creation error:", error);
-          res.status(500).json({
-            message: "Error creating payment session",
-            details:
-              process.env.NODE_ENV === "development"
-                ? (error as Error).message
-                : undefined,
-          });
-          return;
-        }
-      }
-
       if (method === "razorpay") {
         try {
           const order = await PaymentService.createRazorpayOrder(userId, plan);
@@ -100,77 +71,6 @@ router.post(
       res.status(500).json({
         message: "Error creating payment session",
         details: error instanceof Error ? error.message : "Unknown error",
-      });
-      return;
-    }
-  }
-);
-
-router.post(
-  "/stripe/verify",
-  authMiddleware,
-  async (req: express.Request, res: express.Response) => {
-    try {
-      const { sessionId } = req.body;
-      if (!sessionId) {
-        res.status(400).json({ message: "Session ID is required" });
-        return;
-      }
-
-      console.log("Verifying session:", sessionId);
-
-      // Get the session with expanded payment_intent
-      const session = await stripe.checkout.sessions.retrieve(sessionId, {
-        expand: ["payment_intent", "subscription"],
-      });
-
-      console.log("Session status:", session.payment_status);
-      console.log("Session metadata:", session.metadata);
-
-      // Check if payment is successful
-      if (session.payment_status !== "paid") {
-        res.status(400).json({
-          success: false,
-          message: "Payment not completed",
-        });
-        return;
-      }
-
-      const userId = session.metadata?.userId;
-      const plan = session.metadata?.plan as PlanType;
-
-      if (!userId || !plan) {
-        res.status(400).json({
-          success: false,
-          message: "Missing user or plan information",
-        });
-        return;
-      }
-
-      // Get payment intent ID
-      const paymentIntentId =
-        typeof session.payment_intent === "string"
-          ? session.payment_intent
-          : session.payment_intent?.id;
-
-      if (!paymentIntentId) {
-        res.status(400).json({
-          success: false,
-          message: "Missing payment information",
-        });
-        return;
-      }
-
-      // Create subscription and add credits
-      await createSubscriptionRecord(userId, plan, paymentIntentId, sessionId);
-
-      res.json({ success: true });
-      return;
-    } catch (error) {
-      console.error("Stripe verification error:", error);
-      res.status(500).json({
-        success: false,
-        message: error instanceof Error ? error.message : "Unknown error",
       });
       return;
     }
@@ -367,94 +267,6 @@ router.get(
     }
   }
 );
-
-// Add Stripe webhook handler
-router.post(
-  "/webhook",
-  express.raw({ type: "application/json" }),
-  async (req, res) => {
-    const sig = req.headers["stripe-signature"];
-
-    try {
-      if (!sig) throw new Error("No Stripe signature found");
-
-      const event = stripe.webhooks.constructEvent(
-        req.body,
-        sig,
-        process.env.STRIPE_WEBHOOK_SECRET!
-      );
-
-      console.log("Webhook event received:", event.type);
-
-      switch (event.type) {
-        case "checkout.session.completed": {
-          const session = event.data.object as Stripe.Checkout.Session;
-          const userId = session.metadata?.userId;
-          const plan = session.metadata?.plan as PlanType;
-
-          if (!userId || !plan) {
-            throw new Error("Missing metadata in session");
-          }
-
-          console.log("Processing successful payment:", {
-            userId,
-            plan,
-            sessionId: session.id,
-          });
-
-          await createSubscriptionRecord(
-            userId,
-            plan,
-            session.payment_intent as string,
-            session.id
-          );
-
-          console.log("Successfully processed payment and added credits");
-          break;
-        }
-      }
-
-      res.json({ received: true });
-    } catch (error) {
-      console.error("Webhook error:", error);
-      res
-        .status(400)
-        .send(
-          `Webhook Error: ${error instanceof Error ? error.message : "Unknown error"}`
-        );
-    }
-  }
-);
-
-// Add this new verification endpoint
-router.post("/verify", async (req, res) => {
-  try {
-    const { sessionId } = req.body;
-
-    if (!sessionId) {
-      res.status(400).json({ message: "Session ID is required" });
-      return;
-    }
-
-    // Verify the payment session
-    const isValid = await verifyStripePayment(sessionId);
-
-    if (isValid) {
-      res.json({ success: true });
-      return;
-    } else {
-      res.status(400).json({ message: "Payment verification failed" });
-      return;
-    }
-  } catch (error) {
-    console.error("Payment verification error:", error);
-    res.status(500).json({
-      message: "Error verifying payment",
-      details: error instanceof Error ? error.message : "Unknown error",
-    });
-    return;
-  }
-});
 
 router.get("/transactions", authMiddleware, async (req, res) => {
   try {

@@ -2,7 +2,6 @@
   {
     "name": "common",
     "module": "index.ts",
-    "type": "module",
     "exports": {
       "./types": "./types.ts",
       "./inferred": "./inferred-types.ts"
