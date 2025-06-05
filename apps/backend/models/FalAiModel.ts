@@ -19,10 +19,8 @@ export class FalAIModel {
     return { request_id, response_url };
   }
 
-
-
   public async trainModel(zipUrl: string, triggerWord: string) {
-   
+    console.log("Training model with URL:", zipUrl);
 
     try {
       const response = await fetch(zipUrl, { method: "HEAD" });
@@ -33,7 +31,7 @@ export class FalAIModel {
         throw new Error(`ZIP URL not accessible: ${response.status}`);
       }
     } catch (error) {
-     
+      console.error("Error checking ZIP URL:", error);
       throw new Error(`ZIP URL validation failed: ${error as any}.message}`);
     }
 
@@ -48,7 +46,7 @@ export class FalAIModel {
       }
     );
 
-    
+    console.log("Model training submitted:", request_id);
     return { request_id, response_url };
   }
 
