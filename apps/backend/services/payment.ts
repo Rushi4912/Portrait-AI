@@ -1,29 +1,19 @@
-import Stripe from "stripe";
+
 import Razorpay from "razorpay";
 import { prismaClient } from "db";
 import crypto from "crypto";
 // import { PlanType } from "@prisma/client";
 
 // Validate environment variables
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
 const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
 type PlanType = "basic" | "premium";
-
-if (!STRIPE_SECRET_KEY) {
-  console.error("Missing STRIPE_SECRET_KEY");
-}
 
 if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
   console.error("Missing Razorpay credentials");
 }
 
 // Initialize payment providers
-const stripe = STRIPE_SECRET_KEY
-  ? new Stripe(STRIPE_SECRET_KEY, {
-       apiVersion: "2025-05-28.basil",
-    })
-  : null;
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID!,
@@ -71,68 +61,6 @@ export async function createTransactionRecord(
     throw error;
   }
 }
-
-export async function createStripeSession(
-  userId: string,
-  plan: "basic" | "premium",
-  email: string
-) {
-  try {
-    if (!stripe) {
-      throw new Error("Stripe is not configured");
-    }
-
-    const price = PLAN_PRICES[plan];
-
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: `${plan.charAt(0).toUpperCase() + plan.slice(1)} Plan`,
-              description: `One-time payment for ${CREDITS_PER_PLAN[plan]} credits`,
-            },
-            unit_amount: price,
-          },
-          quantity: 1,
-        },
-      ],
-      mode: "payment",
-      success_url: `${process.env.FRONTEND_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}&token=${Buffer.from(JSON.stringify({timestamp: Date.now(), orderId: '{CHECKOUT_SESSION_ID}'})).toString('base64')}`,
-      cancel_url: `${process.env.FRONTEND_URL}/payment/cancel?session_id={CHECKOUT_SESSION_ID}&token=${Buffer.from(JSON.stringify({timestamp: Date.now(), orderId: '{CHECKOUT_SESSION_ID}'})).toString('base64')}`,
-      customer_email: email,
-      metadata: {
-        userId,
-        plan,
-      },
-    });
-
-    await createTransactionRecord(
-      userId,
-      price,
-      "usd",
-      session.payment_intent as string,
-      session.id,
-      plan,
-      "PENDING"
-    );
-
-    return session;
-  } catch (error) {
-    console.error("Stripe session creation error:", error);
-    throw error;
-  }
-}
-
-export async function getStripeSession(sessionId: string) {
-  if (!stripe) {
-    throw new Error("Stripe is not configured");
-  }
-  return await stripe.checkout.sessions.retrieve(sessionId);
-}
-
 export async function createRazorpayOrder(
   userId: string,
   plan: keyof typeof PLAN_PRICES
@@ -193,42 +121,6 @@ export async function createRazorpayOrder(
   }
 }
 
-export async function verifyStripePayment(sessionId: string) {
-  if (!stripe) {
-    throw new Error("Stripe is not configured");
-  }
-
-  const session = await stripe.checkout.sessions.retrieve(sessionId);
-  const { userId, plan } = session.metadata as {
-    userId: string;
-    plan: PlanType;
-  };
-
-  // Find existing pending transaction
-  const existingTransaction = await prismaClient.transaction.findFirst({
-    where: {
-      orderId: session.id,
-      userId: userId,
-      status: "PENDING",
-    },
-  });
-
-  if (!existingTransaction) {
-    throw new Error("No pending transaction found for this session");
-  }
-
-  // Update the transaction status
-  await prismaClient.transaction.update({
-    where: {
-      id: existingTransaction.id,
-    },
-    data: {
-      status: session.payment_status === "paid" ? "SUCCESS" : "FAILED",
-    },
-  });
-
-  return session.payment_status === "paid";
-}
 
 export const verifyRazorpaySignature = async ({
   paymentId,
@@ -373,10 +265,9 @@ export async function createSubscriptionRecord(
 }
 
 export const PaymentService = {
-  createStripeSession,
+  
   createRazorpayOrder,
   verifyRazorpaySignature,
-  getStripeSession,
   createSubscriptionRecord,
   addCreditsForPlan,
 };
