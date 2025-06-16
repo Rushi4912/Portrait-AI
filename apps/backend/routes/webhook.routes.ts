@@ -4,10 +4,6 @@ import { Webhook } from "svix";
 
 export const router = Router();
 
-/**
- * POST api/webhook/clerk
- * Clerk webhook endpoint
- */
 router.post("/clerk", async (req, res) => {
   const SIGNING_SECRET = process.env.SIGNING_SECRET;
 

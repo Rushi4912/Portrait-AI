@@ -4,7 +4,7 @@ import { prismaClient } from "db";
 import crypto from "crypto";
 // import { PlanType } from "@prisma/client";
 
-// Validate environment variables
+
 const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
 const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
 type PlanType = "basic" | "premium";

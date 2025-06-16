@@ -39,7 +39,6 @@ export default function RootLayout({
         <body className={`${geistSans.variable} ${geistMono.variable} h-full`}>
           <Providers>
           <Appbar />
-          {/* Increased padding-top to prevent navbar overlap */}
           <main className="pt-24 min-h-full">
             {children}
           </main>
