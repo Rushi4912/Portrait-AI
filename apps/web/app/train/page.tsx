@@ -24,10 +24,10 @@ import { TrainModelInput } from "common/inferred"
 import axios from "axios"
 import { BACKEND_URL } from "../../app/config"
 import { useRouter } from "next/navigation"
-// import { useAuth } from "@clerk/nextjs"
+import { useAuth } from "@clerk/nextjs"
 
 export default function Train() {
-    // const { getToken } = useAuth();
+    const { getToken } = useAuth();
     const [zipUrl, setZipUrl] = useState("");
     const [type, setType] = useState("Man")
     const [age, setAge] = useState<string>()

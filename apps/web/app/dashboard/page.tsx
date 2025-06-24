@@ -62,7 +62,7 @@ export default async function DashboardPage() {
               value="packs"
               className="mt-0 focus-visible:outline-none"
             >
-              {/* <Packs /> */}
+              <Packs />
             </TabsContent>
             <TabsContent
               value="train"

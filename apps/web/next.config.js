@@ -5,6 +5,7 @@ const nextConfig = {
         'i.pinimg.com',
       'static1.cbrimages.com',
       'comicbook.com',
+      'freshangleng.com'
       
       ],
     },
