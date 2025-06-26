@@ -16,7 +16,7 @@ export class FalAIModel {
       }
     );
 
-    return { request_id, response_url};
+    return { request_id, response_url };
   }
 
   public async trainModel(zipUrl: string, triggerWord: string) {

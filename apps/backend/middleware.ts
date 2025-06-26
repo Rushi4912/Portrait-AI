@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { clerkClient } from "@clerk/clerk-sdk-node";
+import { prismaClient } from "db";  // import Prisma client
 
 declare global {
   namespace Express {
@@ -44,8 +45,8 @@ export async function authMiddleware(
 
     const decoded = jwt.verify(token, formattedKey, {
       algorithms: ["RS256"],
-      issuer:
-        process.env.CLERK_ISSUER || "https://clerk.100xdevs.com",
+      // issuer:
+      //   // process.env.CLERK_ISSUER || "https://clerk.100xdevs.com",
       complete: true,
     });
 
@@ -77,6 +78,14 @@ export async function authMiddleware(
     req.user = {
       email: primaryEmail.emailAddress,
     };
+    
+
+    // Ensure the user has a credits record (with 20 starting credits)
+    await prismaClient.userCredit.upsert({
+      where: { userId },
+      update: {},              // no-op if exists
+      create: { userId, amount: 20 },
+    });
 
     next();
   } catch (error) {

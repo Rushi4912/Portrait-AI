@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import axios from "axios";
-// import { BACKEND_URL } from "@/app/config";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Card } from "./ui/card";
@@ -25,23 +24,44 @@ export function SelectModel({
   selectedModel?: string;
 }) {
   const { getToken } = useAuth();
-  const [modelLoading, setModalLoading] = useState(false);
+  const [modelLoading, setModelLoading] = useState(true); // ✅ Start as true
   const [models, setModels] = useState<TModel[]>([]);
+  const [error, setError] = useState<string | null>(null); // ✅ Add error state
   const baseurl = "http://localhost:8080";
 
-
   useEffect(() => {
-    (async () => {
-      const token = await getToken();
-      const response = await axios.get(`${baseurl}/models`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setModels(response.data.models);
-      setSelectedModel(response.data.models[0]?.id);
-      setModalLoading(false);
-    })();
+    const fetchModels = async () => {
+      try {
+        setModelLoading(true); 
+        setError(null); 
+        
+        const token = await getToken();
+        console.log(token); 
+        
+        const response = await axios.get(`${baseurl}/models`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        
+        console.log("Models response:", response.data); // ✅ Debug log
+        
+        setModels(response.data.models || []);
+        
+        // Only set selected model if we have models
+        // if (response.data.models && response.data.models.length > 0) {
+        //   setSelectedModel(response.data.models[0]?.id);
+        // }
+        setSelectedModel(response.data.models[0]?.id);
+      } catch (error) {
+        console.error("Failed to fetch models:", error); 
+        setError("Failed to load models");
+      } finally {
+        setModelLoading(false); 
+      }
+    };
+
+    fetchModels();
   }, []);
 
   const container = {
@@ -58,6 +78,23 @@ export function SelectModel({
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0 },
   };
+
+  // ✅ Show error state
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col items-center justify-center p-12 rounded-lg border border-dashed border-red-200">
+          <p className="text-red-500">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-2 text-sm text-blue-500 hover:underline"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -133,9 +170,17 @@ export function SelectModel({
           <Sparkles className="h-12 w-12 text-muted-foreground/50" />
           <h3 className="mt-4 text-lg font-medium">No models available</h3>
           <p className="mt-2 text-sm text-muted-foreground text-center">
-            Start by training a new model
+            Start by training a new model or check if your models have "Generated" status
           </p>
         </motion.div>
+      )}
+      
+      {/* ✅ Debug info in development */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mt-4 p-2 bg-gray-100 rounded text-xs">
+          <p>Debug: Found {models.length} total models</p>
+          <p>Generated models: {models.filter(m => m.trainingStatus === "Generated").length}</p>
+        </div>
       )}
     </div>
   );

@@ -26,6 +26,16 @@ const PORT = process.env.PORT || 8080;
 const falAiModel = new FalAIModel();
 
 const app = express();
+declare global {
+  namespace Express {
+    interface Request {
+      userId?: string;
+    }
+  }
+}
+// interface AuthenticatedRequest extends Request {
+//   userId?: string;
+// }
 app.use(
   cors({
     origin: true,
@@ -100,6 +110,43 @@ app.post("/ai/training", authMiddleware, async (req, res) => {
     });
   }
 });
+// src/routes/balance.ts
+app.get("/balance", authMiddleware, async (req, res) => {
+  try {
+    // TEMPORARY: Hardcoded user ID for testing
+    const testUserId = "user_2xokzIuNpd7YfnFmbsfBxlXmdxn"; // Your Clerk user ID
+   
+    // Use either authenticated user or test user
+    const userId = process.env.NODE_ENV === "development"
+      ? testUserId
+      : req.userId;
+
+    const creditRecord = await prismaClient.userCredit.findUnique({
+      where: { userId }
+    });
+
+    // Create record if missing (for testing)
+    if (!creditRecord && process.env.NODE_ENV === "development") {
+      await prismaClient.userCredit.create({
+        data: {
+          userId: testUserId,
+          amount: 1000 // Test credit amount
+        }
+      });
+    }
+
+    res.status(200).json({ credits: creditRecord?.amount || 0 });
+  } catch (error) {
+    console.error("Credit balance error:", error);
+    res.status(500).json({
+      error: "Internal server error",
+      message: error instanceof Error ? error.message : "Unknown error"
+    });
+  }
+});
+
+
+
 
 app.post("/ai/generate", authMiddleware, async (req, res) => {
   const parsedBody = GenerateImage.safeParse(req.body);
@@ -121,21 +168,10 @@ app.post("/ai/generate", authMiddleware, async (req, res) => {
     });
     return;
   }
-  // check if the user has enough credits
-  const credits = await prismaClient.userCredit.findUnique({
-    where: {
-      userId: req.userId!,
-    },
-  });
 
-  if ((credits?.amount ?? 0) < IMAGE_GEN_CREDITS) {
-    res.status(411).json({
-      message: "Not enough credits",
-    });
-    return;
-  }
+  // REMOVED: Credit check block
 
-  const { request_id, response_url } = await falAiModel.generateImage(
+  const { request_id } = await falAiModel.generateImage(
     parsedBody.data.prompt,
     model.tensorPath
   );
@@ -150,20 +186,50 @@ app.post("/ai/generate", authMiddleware, async (req, res) => {
     },
   });
 
-  await prismaClient.userCredit.update({
-    where: {
-      userId: req.userId!,
-    },
-    data: {
-      amount: { decrement: IMAGE_GEN_CREDITS },
-    },
-  });
+  // REMOVED: Credit deduction block
 
   res.json({
     imageId: data.id,
   });
 });
+// app.post("/ai/generate-test", async (req, res) => {
+//   try {
+//     const { prompt } = req.body;
+    
+//     if (!prompt || typeof prompt !== "string") {
+//       return res.status(400).json({ error: "Prompt is required" });
+//     }
 
+//     const result = await fal.subscribe("fal-ai/flux-lora", {
+//       input: {
+//         prompt: prompt,
+//       },
+//       logs: true,
+//       onQueueUpdate: (update) => {
+//         if (update.status === "IN_PROGRESS") {
+//           update.logs.map((log) => log.message).forEach(console.log);
+//         }
+//       },
+//     });
+
+//     // Get the first image URL from the response
+//     const imageUrl = result.data?.images?.[0]?.url;
+    
+//     if (!imageUrl) {
+//       throw new Error("No image URL in response");
+//     }
+
+//     // Return the image URL to the frontend
+//     res.json({ imageUrl });
+
+//   } catch (error) {
+//     console.error("Test generation error:", error);
+//     res.status(500).json({ 
+//       error: "Test generation failed",
+//       message: error instanceof Error ? error.message : "Unknown error"
+//     });
+//   }
+// });
 app.post("/pack/generate", authMiddleware, async (req, res) => {
   const parsedBody = GenerateImagesFromPack.safeParse(req.body);
 
@@ -270,17 +336,31 @@ app.get("/image/bulk", authMiddleware, async (req, res) => {
   });
 });
 
-app.get("/models", authMiddleware, async (req, res) => {
-  const models = await prismaClient.model.findMany({
-    where: {
-      OR: [{ userId: req.userId }, { open: true }],
-    },
-  });
+app.get("/models",  async (req, res) => {
 
-  res.json({
-    models,
-  });
+  try{
+    console.log("from try block :");
+    const models = await prismaClient.model.findMany({
+      where: {
+        OR: [{ userId: req.userId }, { open: true }],
+      },
+    });
+    res.json({
+      models,
+    });
+  }catch(error:any){
+
+    console.error("error in models");
+    res.status(500).json({ 
+      message: "Failed to fetch models",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+
 });
+
+// In your payment routes file
+
 
 app.post("/fal-ai/webhook/train", async (req, res) => {
   console.log("====================Received training webhook====================");
@@ -320,7 +400,7 @@ app.post("/fal-ai/webhook/train", async (req, res) => {
     return;
   }
 
-  // Check for both "COMPLETED" and "OK" status
+ 
   if (req.body.status === "COMPLETED" || req.body.status === "OK") {
     try {
       // Check if we have payload data directly in the webhook

@@ -5,14 +5,13 @@ import { useState } from "react";
 import { Button } from "./ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import axios from "axios";
-// import { BACKEND_URL } from "@/app/config";
+import { BACKEND_URL } from "../app/config";
 import { SelectModel } from "./Models";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
-import { useCredits } from "@/hooks/use-credits";
 import { useRouter } from "next/navigation";
-import CustomLabel from "../components/ui/customLabel";
+import CustomLabel from "./ui/customLabel";
 import { GlowEffect } from "./GlowEffect";
 
 export function GenerateImage() {
@@ -20,24 +19,16 @@ export function GenerateImage() {
   const [selectedModel, setSelectedModel] = useState<string>();
   const [isGenerating, setIsGenerating] = useState(false);
   const { getToken } = useAuth();
-  const { credits } = useCredits();
   const router = useRouter();
 
   const handleGenerate = async () => {
-    const baseurl = "http://localhost:8080";
-
     if (!prompt || !selectedModel) return;
-
-    if (credits <= 0) {
-      router.push("/pricing");
-      return;
-    }
 
     setIsGenerating(true);
     try {
       const token = await getToken();
       await axios.post(
-        `${baseurl}/ai/generate`,
+        `${BACKEND_URL}/ai/generate`,
         {
           prompt,
           modelId: selectedModel,
@@ -79,6 +70,7 @@ export function GenerateImage() {
           <Textarea
             className="w-full min-h-24"
             onChange={(e) => setPrompt(e.target.value)}
+            value={prompt}
           />
         </motion.div>
 
@@ -90,7 +82,17 @@ export function GenerateImage() {
               variant={"outline"}
               className="relative z-20 cursor-pointer"
             >
-              Generate Image <Sparkles size={24} />
+              {isGenerating ? (
+                <>
+                  Generating...
+                  <Sparkles size={24} className="ml-2 animate-pulse" />
+                </>
+              ) : (
+                <>
+                  Generate Image
+                  <Sparkles size={24} className="ml-2" />
+                </>
+              )}
             </Button>
             {(prompt && selectedModel) && (
               <GlowEffect

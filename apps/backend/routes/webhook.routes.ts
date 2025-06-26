@@ -53,6 +53,7 @@ router.post("/clerk", async (req, res) => {
     switch (eventType) {
       case "user.created":
       case "user.updated": {
+        // Update user record
         await prismaClient.user.upsert({
           where: { clerkId: id },
           update: {
@@ -67,10 +68,26 @@ router.post("/clerk", async (req, res) => {
             profilePicture: evt.data.profile_image_url,
           },
         });
+
+        // ADD THIS: Create/update UserCredit record
+        await prismaClient.userCredit.upsert({
+          where: { userId: id },
+          create: {
+            userId: id,
+            amount: 20, // Default credits for new users
+          },
+          update: {} // Don't update credits on existing users
+        });
         break;
       }
 
       case "user.deleted": {
+        // Delete credit record first
+        await prismaClient.userCredit.deleteMany({
+          where: { userId: id },
+        });
+        
+        // Then delete user
         await prismaClient.user.delete({
           where: { clerkId: id },
         });
@@ -88,5 +105,4 @@ router.post("/clerk", async (req, res) => {
   }
 
   res.status(200).json({ success: true, message: "Webhook received" });
-  return;
 });
