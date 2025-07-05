@@ -111,7 +111,6 @@ app.post("/ai/training", authMiddleware, async (req, res) => {
   }
 });
 // src/routes/balance.ts
-app.get("/balance", authMiddleware, async (req, res) => {
   try {
     // TEMPORARY: Hardcoded user ID for testing
     const testUserId = "user_2xokzIuNpd7YfnFmbsfBxlXmdxn"; // Your Clerk user ID
@@ -140,10 +139,7 @@ app.get("/balance", authMiddleware, async (req, res) => {
     console.error("Credit balance error:", error);
     res.status(500).json({
       error: "Internal server error",
-      message: error instanceof Error ? error.message : "Unknown error"
-    });
-  }
-});
+      message: error instanceof Error ? error.message : 
 
 
 
