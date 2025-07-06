@@ -33,9 +33,6 @@ declare global {
     }
   }
 }
-// interface AuthenticatedRequest extends Request {
-//   userId?: string;
-// }
 app.use(
   cors({
     origin: true,
@@ -165,7 +162,6 @@ app.post("/ai/generate", authMiddleware, async (req, res) => {
     return;
   }
 
-  // REMOVED: Credit check block
 
   const { request_id } = await falAiModel.generateImage(
     parsedBody.data.prompt,
@@ -182,13 +178,11 @@ app.post("/ai/generate", authMiddleware, async (req, res) => {
     },
   });
 
-  // REMOVED: Credit deduction block
 
   res.json({
     imageId: data.id,
   });
 });
-// app.post("/ai/generate-test", async (req, res) => {
 //   try {
 //     const { prompt } = req.body;
     
@@ -355,7 +349,6 @@ app.get("/models",  async (req, res) => {
 
 });
 
-// In your payment routes file
 
 
 app.post("/fal-ai/webhook/train", async (req, res) => {
