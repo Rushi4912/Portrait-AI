@@ -10,29 +10,18 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { FalAIModel } from "./models/FalAIModel";
 import cors from "cors";
-import { authMiddleware } from "./middleware";
+import {authMiddleware}  from "./middleware";
 import dotenv from "dotenv";
 dotenv.config();
-
 import paymentRoutes from "../backend/routes/payment.routes";
 import { router as webhookRouter } from "./routes/webhook.routes";
-
 const IMAGE_GEN_CREDITS = 1;
 const TRAIN_MODEL_CREDITS = 20;
-
-
 const PORT = process.env.PORT || 8080;
 
 const falAiModel = new FalAIModel();
 
 const app = express();
-declare global {
-  namespace Express {
-    interface Request {
-      userId?: string;
-    }
-  }
-}
 app.use(
   cors({
     origin: true,
@@ -42,28 +31,37 @@ app.use(
   })
 );
 app.use(express.json());
+// app.use(authMiddleware);
 
 app.get("/pre-signed-url", async (req, res) => {
-  const key = `models/${Date.now()}_${Math.random()}.zip`;
-  const s3 = new S3Client({
-    region: process.env.S3_REGION,
-    credentials: {
-      accessKeyId: process.env.S3_ACCESS_KEY!,
-      secretAccessKey: process.env.S3_SECRET_KEY!,
-    },
-    endpoint: process.env.ENDPOINT, // optional, only if using custom endpoint
-    forcePathStyle: !!process.env.ENDPOINT, // needed for some S3-compatible storage
-  });
+  try {
+    const key = `models/${Date.now()}_${Math.random()}.zip`;
 
-  const command = new PutObjectCommand({
-    Bucket: process.env.BUCKET_NAME!,
-    Key: key,
-    ContentType: "application/zip",
-  });
+    const s3Client = new S3Client({
+      region: process.env.S3_REGION || "us-east-1", 
+      credentials: {
+        accessKeyId: process.env.S3_ACCESS_KEY!,
+        secretAccessKey: process.env.S3_SECRET_KEY!,
+      },
+      endpoint: process.env.ENDPOINT, 
+      forcePathStyle: false, 
+    });
 
-  const url = await getSignedUrl(s3, command, { expiresIn: 60 * 5 });
+    const command = new PutObjectCommand({
+      Bucket: process.env.BUCKET_NAME!,
+      Key: key,
+      ContentType: "application/zip",
+    });
 
-  res.json({ url, key });
+    const url = await getSignedUrl(s3Client, command, {
+      expiresIn: 60 * 5, 
+    });
+
+    res.json({ url, key });
+  } catch (error) {
+    console.error("Error creating pre-signed URL:", error);
+    res.status(500).json({ error: "Failed to generate pre-signed URL" });
+  }
 });
 
 app.post("/ai/training", authMiddleware, async (req, res) => {
@@ -107,39 +105,6 @@ app.post("/ai/training", authMiddleware, async (req, res) => {
     });
   }
 });
-// src/routes/balance.ts
-  try {
-    // TEMPORARY: Hardcoded user ID for testing
-    const testUserId = "user_2xokzIuNpd7YfnFmbsfBxlXmdxn"; // Your Clerk user ID
-   
-    // Use either authenticated user or test user
-    const userId = process.env.NODE_ENV === "development"
-      ? testUserId
-      : req.userId;
-
-    const creditRecord = await prismaClient.userCredit.findUnique({
-      where: { userId }
-    });
-
-    // Create record if missing (for testing)
-    if (!creditRecord && process.env.NODE_ENV === "development") {
-      await prismaClient.userCredit.create({
-        data: {
-          userId: testUserId,
-          amount: 1000 // Test credit amount
-        }
-      });
-    }
-
-    res.status(200).json({ credits: creditRecord?.amount || 0 });
-  } catch (error) {
-    console.error("Credit balance error:", error);
-    res.status(500).json({
-      error: "Internal server error",
-      message: error instanceof Error ? error.message : 
-
-
-
 
 app.post("/ai/generate", authMiddleware, async (req, res) => {
   const parsedBody = GenerateImage.safeParse(req.body);
@@ -161,9 +126,21 @@ app.post("/ai/generate", authMiddleware, async (req, res) => {
     });
     return;
   }
+  // check if the user has enough credits
+  const credits = await prismaClient.userCredit.findUnique({
+    where: {
+      userId: req.userId!,
+    },
+  });
 
+  if ((credits?.amount ?? 0) < IMAGE_GEN_CREDITS) {
+    res.status(411).json({
+      message: "Not enough credits",
+    });
+    return;
+  }
 
-  const { request_id } = await falAiModel.generateImage(
+  const { request_id, response_url } = await falAiModel.generateImage(
     parsedBody.data.prompt,
     model.tensorPath
   );
@@ -178,48 +155,20 @@ app.post("/ai/generate", authMiddleware, async (req, res) => {
     },
   });
 
+  await prismaClient.userCredit.update({
+    where: {
+      userId: req.userId!,
+    },
+    data: {
+      amount: { decrement: IMAGE_GEN_CREDITS },
+    },
+  });
 
   res.json({
     imageId: data.id,
   });
 });
-//   try {
-//     const { prompt } = req.body;
-    
-//     if (!prompt || typeof prompt !== "string") {
-//       return res.status(400).json({ error: "Prompt is required" });
-//     }
 
-//     const result = await fal.subscribe("fal-ai/flux-lora", {
-//       input: {
-//         prompt: prompt,
-//       },
-//       logs: true,
-//       onQueueUpdate: (update) => {
-//         if (update.status === "IN_PROGRESS") {
-//           update.logs.map((log) => log.message).forEach(console.log);
-//         }
-//       },
-//     });
-
-//     // Get the first image URL from the response
-//     const imageUrl = result.data?.images?.[0]?.url;
-    
-//     if (!imageUrl) {
-//       throw new Error("No image URL in response");
-//     }
-
-//     // Return the image URL to the frontend
-//     res.json({ imageUrl });
-
-//   } catch (error) {
-//     console.error("Test generation error:", error);
-//     res.status(500).json({ 
-//       error: "Test generation failed",
-//       message: error instanceof Error ? error.message : "Unknown error"
-//     });
-//   }
-// });
 app.post("/pack/generate", authMiddleware, async (req, res) => {
   const parsedBody = GenerateImagesFromPack.safeParse(req.body);
 
@@ -326,33 +275,24 @@ app.get("/image/bulk", authMiddleware, async (req, res) => {
   });
 });
 
-app.get("/models",  async (req, res) => {
+app.get("/models",authMiddleware, async (req, res) => {
 
-  try{
-    console.log("from try block :");
-    const models = await prismaClient.model.findMany({
-      where: {
-        OR: [{ userId: req.userId }, { open: true }],
-      },
-    });
-    res.json({
-      models,
-    });
-  }catch(error:any){
+  console.log(req.userId);
+  const models = await prismaClient.model.findMany({
+    where: {
+      OR: [{ userId: req.userId }, { open: true }],
+    },
+  });
 
-    console.error("error in models");
-    res.status(500).json({ 
-      message: "Failed to fetch models",
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-
+  res.json({
+    models,
+  });
 });
 
-
-
 app.post("/fal-ai/webhook/train", async (req, res) => {
-  console.log("====================Received training webhook====================");
+  console.log(
+    "====================Received training webhook===================="
+  );
   console.log("Received training webhook:", req.body);
   const requestId = req.body.request_id as string;
 
@@ -382,28 +322,35 @@ app.post("/fal-ai/webhook/train", async (req, res) => {
         trainingStatus: "Failed",
       },
     });
-    
+
     res.json({
       message: "Error recorded",
     });
     return;
   }
 
- 
+  // Check for both "COMPLETED" and "OK" status
   if (req.body.status === "COMPLETED" || req.body.status === "OK") {
     try {
       // Check if we have payload data directly in the webhook
       let loraUrl;
-      if (req.body.payload && req.body.payload.diffusers_lora_file && req.body.payload.diffusers_lora_file.url) {
+      if (
+        req.body.payload &&
+        req.body.payload.diffusers_lora_file &&
+        req.body.payload.diffusers_lora_file.url
+      ) {
         // Extract directly from webhook payload
         loraUrl = req.body.payload.diffusers_lora_file.url;
         console.log("Using lora URL from webhook payload:", loraUrl);
       } else {
         // Fetch result from fal.ai if not in payload
         console.log("Fetching result from fal.ai");
-        const result = await fal.queue.result("fal-ai/flux-lora-fast-training", {
-          requestId,
-        });
+        const result = await fal.queue.result(
+          "fal-ai/flux-lora-fast-training",
+          {
+            requestId,
+          }
+        );
         console.log("Fal.ai result:", result);
         const resultData = result.data as any;
         loraUrl = resultData.diffusers_lora_file.url;
@@ -451,7 +398,10 @@ app.post("/fal-ai/webhook/train", async (req, res) => {
         },
       });
 
-      console.log("Updated model and decremented credits for user:", model.userId);
+      console.log(
+        "Updated model and decremented credits for user:",
+        model.userId
+      );
     } catch (error) {
       console.error("Error processing webhook:", error);
       await prismaClient.model.updateMany({

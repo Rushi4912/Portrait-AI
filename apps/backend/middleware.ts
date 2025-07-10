@@ -1,8 +1,8 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { clerkClient } from "@clerk/clerk-sdk-node";
-import { prismaClient } from "db";  // import Prisma client
-
+import  dotenv from "dotenv";
+dotenv.config();
 declare global {
   namespace Express {
     interface Request {
@@ -13,7 +13,6 @@ declare global {
     }
   }
 }
-
 export async function authMiddleware(
   req: Request,
   res: Response,
@@ -28,11 +27,8 @@ export async function authMiddleware(
       return;
     }
 
-    // Debug logs
-    console.log("Received token:", token);
-
     // Get the JWT verification key from environment variable
-    const publicKey = process.env.CLERK_JWT_PUBLIC_KEY!;
+    const publicKey = process.env.CLERK_JWT_PUBLIC_KEY;
 
     if (!publicKey) {
       console.error("Missing CLERK_JWT_PUBLIC_KEY in environment variables");
@@ -40,20 +36,21 @@ export async function authMiddleware(
       return;
     }
 
-    // Format the public key properly
-    const formattedKey = publicKey.replace(/\\n/g, "\n");
+    // Properly format the key with correct PEM format
+    const formattedKey = `-----BEGIN PUBLIC KEY-----\n${
+      publicKey
+        .replace(/-----BEGIN PUBLIC KEY-----/, '')
+        .replace(/-----END PUBLIC KEY-----/, '')
+        .replace(/\\n/g, '')
+        .trim()
+    }\n-----END PUBLIC KEY-----`;
 
     const decoded = jwt.verify(token, formattedKey, {
-      algorithms: ["RS256"],
-      // issuer:
-      //   // process.env.CLERK_ISSUER || "https://clerk.100xdevs.com",
-      complete: true,
+      algorithms: ["RS256"]
     });
 
-    console.log("Decoded token:", decoded);
-
     // Extract user ID from the decoded token
-    const userId = (decoded as any).payload.sub;
+    const userId = (decoded as any).sub;
 
     if (!userId) {
       console.error("No user ID in token payload");
@@ -78,23 +75,15 @@ export async function authMiddleware(
     req.user = {
       email: primaryEmail.emailAddress,
     };
-    
-
-    // Ensure the user has a credits record (with 20 starting credits)
-    await prismaClient.userCredit.upsert({
-      where: { userId },
-      update: {},              // no-op if exists
-      create: { userId, amount: 20 },
-    });
 
     next();
-  } catch (error) {
+  } catch (error: any) {
     console.error("Auth error:", error);
     if (error instanceof jwt.JsonWebTokenError) {
       res.status(403).json({
         message: "Invalid token",
         details:
-          process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
+          process.env.NODE_ENV === "development" ? error.message : undefined,
       });
       return;
     }
