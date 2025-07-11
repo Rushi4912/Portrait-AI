@@ -1,5 +1,7 @@
-import { fal } from "@fal-ai/client";
+
 import express from "express";
+import dotenv from "dotenv";
+dotenv.config();
 import {
   TrainModel,
   GenerateImage,
@@ -8,11 +10,10 @@ import {
 import { prismaClient } from "../../packages/db";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { FalAIModel } from "./models/FalAIModel";
 import cors from "cors";
 import {authMiddleware}  from "./middleware";
-import dotenv from "dotenv";
-dotenv.config();
+import { fal } from "@fal-ai/client";
+import { FalAIModel } from "./models/FalAIModel";
 import paymentRoutes from "../backend/routes/payment.routes";
 import { router as webhookRouter } from "./routes/webhook.routes";
 const IMAGE_GEN_CREDITS = 1;
@@ -20,8 +21,8 @@ const TRAIN_MODEL_CREDITS = 20;
 const PORT = process.env.PORT || 8080;
 
 const falAiModel = new FalAIModel();
-
 const app = express();
+console.log(process.env.FAL_KEY);
 app.use(
   cors({
     origin: true,
@@ -104,6 +105,18 @@ app.post("/ai/training", authMiddleware, async (req, res) => {
       error: error instanceof Error ? error.message : "Unknown error",
     });
   }
+});
+
+app.get("/balance", authMiddleware, async (req,res)=>{
+
+  const credits = await prismaClient.userCredit.findUnique({
+    where:{
+      userId:req.userId!,
+    },
+  });
+  res.json({
+    credits:credits?.amount??0
+  });
 });
 
 app.post("/ai/generate", authMiddleware, async (req, res) => {

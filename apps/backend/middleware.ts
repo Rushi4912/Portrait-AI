@@ -1,7 +1,8 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { clerkClient } from "@clerk/clerk-sdk-node";
-import  dotenv from "dotenv";
+import { prismaClient } from "../../packages/db";
+import dotenv from "dotenv";
 dotenv.config();
 declare global {
   namespace Express {
@@ -37,16 +38,14 @@ export async function authMiddleware(
     }
 
     // Properly format the key with correct PEM format
-    const formattedKey = `-----BEGIN PUBLIC KEY-----\n${
-      publicKey
-        .replace(/-----BEGIN PUBLIC KEY-----/, '')
-        .replace(/-----END PUBLIC KEY-----/, '')
-        .replace(/\\n/g, '')
-        .trim()
-    }\n-----END PUBLIC KEY-----`;
+    const formattedKey = `-----BEGIN PUBLIC KEY-----\n${publicKey
+      .replace(/-----BEGIN PUBLIC KEY-----/, "")
+      .replace(/-----END PUBLIC KEY-----/, "")
+      .replace(/\\n/g, "")
+      .trim()}\n-----END PUBLIC KEY-----`;
 
     const decoded = jwt.verify(token, formattedKey, {
-      algorithms: ["RS256"]
+      algorithms: ["RS256"],
     });
 
     // Extract user ID from the decoded token
@@ -75,6 +74,15 @@ export async function authMiddleware(
     req.user = {
       email: primaryEmail.emailAddress,
     };
+
+    await prismaClient.userCredit.upsert({
+      where: { userId: req.userId! },
+      update: {},
+      create: {
+        userId: req.userId!,
+        amount: 20,
+      },
+    });
 
     next();
   } catch (error: any) {
