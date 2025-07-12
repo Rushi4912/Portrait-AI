@@ -32,7 +32,6 @@ app.use(
   })
 );
 app.use(express.json());
-// app.use(authMiddleware);
 
 app.get("/pre-signed-url", async (req, res) => {
   try {
@@ -114,6 +113,7 @@ app.get("/balance", authMiddleware, async (req,res)=>{
       userId:req.userId!,
     },
   });
+
   res.json({
     credits:credits?.amount??0
   });
@@ -282,6 +282,8 @@ app.get("/image/bulk", authMiddleware, async (req, res) => {
     skip: parseInt(offset),
     take: parseInt(limit),
   });
+
+  // console.log(imagesData);
 
   res.json({
     images: imagesData,

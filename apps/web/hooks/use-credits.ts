@@ -19,7 +19,7 @@ export function useCredits() {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-            cache: 'no-store', // Disable caching
+            cache: 'no-store', 
           });
     
           if (response.ok) {
@@ -38,19 +38,19 @@ export function useCredits() {
         const handleCreditUpdate = (event: Event) => {
             console.log("Credit update event received");
             if (event instanceof CustomEvent) {
-                // Immediately update credits if available in event
+                
                 if (event.detail) {
                     setCredits(event.detail);
                 }
             }
-            // Fetch latest credits from server
+          
             fetchCredits();
         };
     
-        // Use the creditUpdateEvent instead of window
+        
         creditUpdateEvent.addEventListener("creditUpdate", handleCreditUpdate);
     
-        // Refresh credits every minute
+        
         const interval = setInterval(fetchCredits, 60 * 1000);
     
         return () => {

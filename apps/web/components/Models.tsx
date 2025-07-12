@@ -24,9 +24,9 @@ export function SelectModel({
   selectedModel?: string;
 }) {
   const { getToken } = useAuth();
-  const [modelLoading, setModelLoading] = useState(true); // ✅ Start as true
+  const [modelLoading, setModelLoading] = useState(true); 
   const [models, setModels] = useState<TModel[]>([]);
-  const [error, setError] = useState<string | null>(null); // ✅ Add error state
+  const [error, setError] = useState<string | null>(null); 
   const baseurl = "http://localhost:8080";
 
   useEffect(() => {
@@ -44,7 +44,7 @@ export function SelectModel({
           },
         });
         
-        console.log("Models response:", response.data); // ✅ Debug log
+        console.log("Models response:", response.data); 
         
         setModels(response.data.models || []);
         
@@ -175,7 +175,6 @@ export function SelectModel({
         </motion.div>
       )}
       
-      {/* ✅ Debug info in development */}
       {process.env.NODE_ENV === 'development' && (
         <div className="mt-4 p-2 bg-gray-100 rounded text-xs">
           <p>Debug: Found {models.length} total models</p>
