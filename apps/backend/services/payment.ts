@@ -13,20 +13,16 @@ if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
   console.error("Missing Razorpay credentials");
 }
 
-// Initialize payment providers
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID!,
   key_secret: process.env.RAZORPAY_KEY_SECRET!,
 });
-
-// Define plan prices (in rupees)
 export const PLAN_PRICES = {
   basic: 4000, 
   premium: 8000, 
 } as const;
 
-// Define credit amounts per plan
 export const CREDITS_PER_PLAN = {
   basic: 500,
   premium: 1000,

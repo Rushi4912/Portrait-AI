@@ -16,6 +16,7 @@ import { fal } from "@fal-ai/client";
 import { FalAIModel } from "./models/FalAIModel";
 import paymentRoutes from "../backend/routes/payment.routes";
 import { router as webhookRouter } from "./routes/webhook.routes";
+const { rateLimit } = require("express-rate-limit");
 const IMAGE_GEN_CREDITS = 1;
 const TRAIN_MODEL_CREDITS = 20;
 const PORT = process.env.PORT || 8080;
@@ -31,8 +32,14 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+const limiter = rateLimit({
+  windowMs: 5 * 60 * 1000, 
+  limit: 10, 
+  standardHeaders: true, 
+  legacyHeaders: false, 
+});
 app.use(express.json());
-
+app.use(limiter);
 app.get("/pre-signed-url", async (req, res) => {
   try {
     const key = `models/${Date.now()}_${Math.random()}.zip`;
@@ -152,6 +159,7 @@ app.post("/ai/generate", authMiddleware, async (req, res) => {
     });
     return;
   }
+
 
   const { request_id, response_url } = await falAiModel.generateImage(
     parsedBody.data.prompt,

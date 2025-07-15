@@ -91,7 +91,6 @@ router.post(
         isAnnual,
       } = req.body;
 
-      // Debug log
       console.log("Verification Request:", {
         userId: req.userId,
         paymentId: razorpay_payment_id,
@@ -133,7 +132,6 @@ router.post(
           return;
         }
 
-        // Create subscription and add credits
         const subscription = await PaymentService.createSubscriptionRecord(
           req.userId!,
           plan as PlanType,
@@ -142,7 +140,7 @@ router.post(
           isAnnual
         );
 
-        // Get updated credits
+     
         const userCredit = await prismaClient.userCredit.findUnique({
           where: { userId: req.userId! },
           select: { amount: true },
@@ -232,7 +230,7 @@ router.get(
   }
 );
 
-// Add this route to get user credits
+
 router.get(
   "/credits",
   authMiddleware,
