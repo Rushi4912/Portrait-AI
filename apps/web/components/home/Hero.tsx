@@ -13,6 +13,7 @@ import { ScrollIndicator } from "./ScrollIndicator";
 import { StatsSection } from "./StatsSection";
 import { PricingSection } from "./PricingSection";
 import { HowItWorks } from "./HowItWorks";
+import { Footer } from "../Footer";
 // import { TrustedBy } from "./TrustedBy";
 
 export function Hero() {
@@ -115,13 +116,17 @@ export function Hero() {
                       Cancel anytime
                     </span>
                   </div>
+               
                 </div>
+              
               </div>
+        
             </motion.section>
           </motion.div>
         </div>
 
         <ScrollIndicator />
+        <Footer/>
       </div>
     </div>
   );

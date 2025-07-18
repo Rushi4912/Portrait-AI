@@ -42,7 +42,7 @@ export default function RootLayout({
           <main className="pt-24 min-h-full">
             {children}
           </main>
-          <Footer />
+          {/* <Footer /> */}
           </Providers>
         </body>
       </html>
