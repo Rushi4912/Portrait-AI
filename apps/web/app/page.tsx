@@ -1,14 +1,20 @@
 "use client";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Hero } from "@/components/home/Hero";
 import { useAuth } from "@/hooks/useAuth";
-import { redirect } from "next/navigation";
 
 
 export default function Home() {
   const { user } = useAuth();
-  if (user) {
-    redirect("/dashboard");
-  }
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user) {
+      router.replace("/dashboard");
+    }
+  }, [user, router]);
+
   return (
     <div>
       <Hero />

@@ -5,6 +5,7 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleDetection": "force",
+    "outDir": "./dist",
     "jsx": "react-jsx",
     "allowJs": true,
 

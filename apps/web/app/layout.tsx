@@ -36,13 +36,13 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" className="h-full">
-        <body className={`${geistSans.variable} ${geistMono.variable} h-full`}>
+        <body className={`${geistSans.variable} ${geistMono.variable} h-full bg-[#faf9f6]`}>
           <Providers>
           <Appbar />
-          <main className="pt-24 min-h-full">
+          {/* Removed fixed pt-24 to let Hero handle spacing if needed, or keep minimal */}
+          <main className="min-h-full">
             {children}
           </main>
-          {/* <Footer /> */}
           </Providers>
         </body>
       </html>

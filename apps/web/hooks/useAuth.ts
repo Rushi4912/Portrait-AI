@@ -9,7 +9,7 @@ export function useAuth() {
     user,
     isLoaded,
     isSignedIn,
-    userId: user?.id || null, // Add this line
+    userId: user?.id || null, 
     getToken
   };
 }

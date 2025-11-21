@@ -1,76 +1,75 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useInView } from "framer-motion";
-import { useRef } from "react";
-import { Upload, Wand2, Download } from "lucide-react";
+import { Upload, Wand2, BookOpen, Camera } from "lucide-react";
 
-const steps = [
+const STEPS = [
   {
-    icon: <Upload className="w-6 h-6" />,
-    title: "Upload Your Photo",
-    description: "Start by uploading any portrait photo you'd like to enhance",
+    number: "01",
+    title: "Upload Photos",
+    description: "Upload 5-10 clear photos of your child's face. Our AI learns their unique features in minutes.",
+    icon: <Camera className="w-6 h-6 text-stone-600" />,
+    color: "bg-blue-50 border-blue-100"
   },
   {
-    icon: <Wand2 className="w-6 h-6" />,
-    title: "AI Magic",
-    description:
-      "Our advanced AI transforms your photo into stunning portraits",
+    number: "02",
+    title: "Choose an Adventure",
+    description: "Pick a theme (Space, Jungle, Magic Castle) and an art style (Watercolor, Pixar, Claymation).",
+    icon: <Wand2 className="w-6 h-6 text-purple-600" />,
+    color: "bg-purple-50 border-purple-100"
   },
   {
-    icon: <Download className="w-6 h-6" />,
-    title: "Download & Share",
-    description: "Get your enhanced portraits in multiple styles instantly",
+    number: "03",
+    title: "Read & Share",
+    description: "Get a complete, illustrated storybook in 2 minutes. Read it online or order a hardcover print.",
+    icon: <BookOpen className="w-6 h-6 text-amber-600" />,
+    color: "bg-amber-50 border-amber-100"
   },
 ];
 
 export function HowItWorks() {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true });
-
   return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 20 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-      transition={{ duration: 0.8 }}
-      className="space-y-30 max-w-7xl mx-auto px-8 sm:px-15 lg:px-8 mt-24 flex flex-col items-center"
-    >
-      <div className="text-center space-y-4 w-full max-w-3xl mb-16">
-        <h2 className="text-3xl md:text-4xl font-bold text-primary mb-8">
-          How It{" "}
-          <span className="bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
-            Works
-          </span>
+    <section className="py-12">
+      <div className="text-center max-w-2xl mx-auto mb-16">
+        <span className="text-amber-600 font-serif italic text-xl">Simple Magic</span>
+        <h2 className="text-3xl md:text-4xl font-serif font-bold text-stone-800 mt-2">
+          From Photo to Storybook
         </h2>
-        <p className="text-muted-foreground text-lg mt-10">
-          Transform your photos into stunning AI-powered portraits in three
-          simple steps
-        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-10 w-full max-w-5xl">
-        {steps.map((step, index) => (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto px-4">
+        {STEPS.map((step, index) => (
           <motion.div
-            key={step.title}
+            key={step.number}
             initial={{ opacity: 0, y: 20 }}
-            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-            transition={{ delay: index * 0.2, duration: 0.5 }}
-            className="relative group flex flex-col items-center"
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: index * 0.2 }}
+            className={`relative p-8 rounded-3xl border-2 ${step.color} flex flex-col items-start h-full hover:shadow-lg transition-shadow duration-300`}
           >
-            <div className="absolute -inset-4 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-xl opacity-0 group-hover:opacity-100 transition duration-500 blur-xl" />
-            <div className="relative space-y-4 text-center p-8 rounded-xl bg-white/5 border border-black/10 dark:border-white/10 w-full">
-              <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
-                {step.icon}
-              </div>
-              <h3 className="text-2xl font-semibold text-primary">
-                {step.title}
-              </h3>
-              <p className="text-muted-foreground text-lg">{step.description}</p>
+            <div className="flex items-center justify-between w-full mb-6">
+                <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-sm">
+                    {step.icon}
+                </div>
+                <span className="text-4xl font-serif font-bold text-stone-200/80">
+                    {step.number}
+                </span>
             </div>
+            
+            <h3 className="text-xl font-serif font-bold text-stone-900 mb-3">
+                {step.title}
+            </h3>
+            <p className="text-stone-600 leading-relaxed">
+                {step.description}
+            </p>
+
+            {/* Dotted connector line for desktop */}
+            {index !== STEPS.length - 1 && (
+                <div className="hidden md:block absolute top-1/2 -right-6 w-8 border-t-2 border-dashed border-stone-300 z-10" />
+            )}
           </motion.div>
         ))}
       </div>
-    </motion.div>
+    </section>
   );
 }

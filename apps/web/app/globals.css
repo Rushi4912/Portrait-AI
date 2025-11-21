@@ -3,23 +3,16 @@
 
 /* @plugin "tailwindcss-animate"; */
 
+/* Remove dark mode override or ensure it matches light mode for this landing page aesthetic */
+/* We want to force the cream background even in dark mode for now to maintain consistency */
 @custom-variant dark (&:is(.dark *));
 
 @keyframes blob {
-  0% {
-    transform: translate(0px, 0px) scale(1);
-  }
-  33% {
-    transform: translate(30px, -50px) scale(1.1);
-  }
-  66% {
-    transform: translate(-20px, 20px) scale(0.9);
-  }
-  100% {
-    transform: translate(0px, 0px) scale(1);
-  }
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+  100% { transform: translate(0px, 0px) scale(1); }
 }
-
 
 .animate-blob {
   animation: blob 7s infinite;
@@ -34,104 +27,77 @@
 }
 
 /* Embla Carousel Styles */
-.embla {
-  overflow: hidden;
-}
-
-.embla__container {
-  display: flex;
-  transition: height 0.2s;
-}
-
-.embla__slide {
-  flex: 0 0 100%;
-  min-width: 0;
-  position: relative;
-}
-
-@media (min-width: 768px) {
-  .embla__slide {
-    flex: 0 0 50%;
-  }
-}
-
-@media (min-width: 1024px) {
-  .embla__slide {
-    flex: 0 0 33.333333%;
-  }
-}
-
-.embla__slide__inner {
-  position: relative;
-  overflow: hidden;
-  height: 100%;
-}
-
-.embla__slide__img {
-  position: absolute;
-  display: block;
-  top: 50%;
-  left: 50%;
-  width: auto;
-  min-height: 100%;
-  min-width: 100%;
-  max-width: none;
-  transform: translate(-50%, -50%);
-}
+.embla { overflow: hidden; }
+.embla__container { display: flex; transition: height 0.2s; }
+.embla__slide { flex: 0 0 100%; min-width: 0; position: relative; }
+@media (min-width: 768px) { .embla__slide { flex: 0 0 50%; } }
+@media (min-width: 1024px) { .embla__slide { flex: 0 0 33.333333%; } }
+.embla__slide__inner { position: relative; overflow: hidden; height: 100%; }
+.embla__slide__img { position: absolute; display: block; top: 50%; left: 50%; width: auto; min-height: 100%; min-width: 100%; max-width: none; transform: translate(-50%, -50%); }
 
 :root {
-  --background: hsl(0 0% 100%);
-  --foreground: hsl(0 0% 3.9%);
-  --card: hsl(0 0% 100%);
-  --card-foreground: hsl(0 0% 3.9%);
-  --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(0 0% 3.9%);
-  --primary: hsl(0 0% 9%);
-  --primary-foreground: hsl(0 0% 98%);
-  --secondary: hsl(0 0% 96.1%);
-  --secondary-foreground: hsl(0 0% 9%);
-  --muted: hsl(0 0% 96.1%);
-  --muted-foreground: hsl(0 0% 45.1%);
-  --accent: hsl(0 0% 96.1%);
-  --accent-foreground: hsl(0 0% 9%);
+  /* Updated for Warm Storybook Theme */
+  --background: #faf9f6; /* Cream White */
+  --foreground: #1c1917; /* Stone 900 */
+  
+  --card: #ffffff;
+  --card-foreground: #1c1917;
+  
+  --popover: #ffffff;
+  --popover-foreground: #1c1917;
+  
+  --primary: #1c1917; /* Stone 900 */
+  --primary-foreground: #faf9f6;
+  
+  --secondary: #f5f5f4; /* Stone 100 */
+  --secondary-foreground: #1c1917;
+  
+  --muted: #f5f5f4;
+  --muted-foreground: #78716c; /* Stone 500 */
+  
+  --accent: #fffbeb; /* Amber 50 */
+  --accent-foreground: #b45309; /* Amber 700 */
+  
   --destructive: hsl(0 84.2% 60.2%);
   --destructive-foreground: hsl(0 0% 98%);
-  --border: hsl(0 0% 89.8%);
-  --input: hsl(0 0% 89.8%);
-  --ring: hsl(0 0% 3.9%);
-  --chart-1: hsl(12 76% 61%);
-  --chart-2: hsl(173 58% 39%);
-  --chart-3: hsl(197 37% 24%);
-  --chart-4: hsl(43 74% 66%);
-  --chart-5: hsl(27 87% 67%);
+  
+  --border: #e7e5e4; /* Stone 200 */
+  --input: #e7e5e4;
+  --ring: #d97706; /* Amber 600 */
+  
   --radius: 0.6rem;
 }
 
 .dark {
-  --background: hsl(0 0% 3.9%);
-  --foreground: hsl(0 0% 98%);
-  --card: hsl(0 0% 3.9%);
-  --card-foreground: hsl(0 0% 98%);
-  --popover: hsl(0 0% 3.9%);
-  --popover-foreground: hsl(0 0% 98%);
-  --primary: hsl(0 0% 98%);
-  --primary-foreground: hsl(0 0% 9%);
-  --secondary: hsl(0 0% 14.9%);
-  --secondary-foreground: hsl(0 0% 98%);
-  --muted: hsl(0 0% 14.9%);
-  --muted-foreground: hsl(0 0% 63.9%);
-  --accent: hsl(0 0% 14.9%);
-  --accent-foreground: hsl(0 0% 98%);
+  /* Forcing light theme values even in dark mode for consistent branding on landing page */
+  /* Or providing a very warm dark mode instead of pure black */
+  --background: #1c1917; /* Stone 900 - Warm Dark */
+  --foreground: #faf9f6;
+  
+  --card: #292524; /* Stone 800 */
+  --card-foreground: #faf9f6;
+  
+  --popover: #292524;
+  --popover-foreground: #faf9f6;
+  
+  --primary: #faf9f6;
+  --primary-foreground: #1c1917;
+  
+  --secondary: #292524;
+  --secondary-foreground: #faf9f6;
+  
+  --muted: #292524;
+  --muted-foreground: #a8a29e; /* Stone 400 */
+  
+  --accent: #451a03; /* Amber 950 */
+  --accent-foreground: #fbbf24; /* Amber 400 */
+  
   --destructive: hsl(0 62.8% 30.6%);
   --destructive-foreground: hsl(0 0% 98%);
-  --border: hsl(0 0% 14.9%);
-  --input: hsl(0 0% 14.9%);
-  --ring: hsl(0 0% 83.1%);
-  --chart-1: hsl(220 70% 50%);
-  --chart-2: hsl(160 60% 45%);
-  --chart-3: hsl(30 80% 55%);
-  --chart-4: hsl(280 65% 60%);
-  --chart-5: hsl(340 75% 55%);
+  
+  --border: #44403c; /* Stone 700 */
+  --input: #44403c;
+  --ring: #d97706;
 }
 
 @theme inline {
@@ -154,11 +120,7 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
+  
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -171,29 +133,7 @@
   }
   body {
     @apply bg-background text-foreground;
-  }
-}
-
-@layer base {
-  :root {
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Add noise texture globally if desired */
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
   }
 }

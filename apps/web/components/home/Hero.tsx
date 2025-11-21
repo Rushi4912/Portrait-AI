@@ -1,132 +1,99 @@
 "use client";
 
-import { BackgroundEffects } from "./BackgroundEffects";
 import { HeroHeader } from "./HeroHeader";
 import { Features } from "./Features";
-import { Testimonials } from "./Testimonials";
-import { ImageCarousel } from "./ImageCarousel";
-import { SignInButton, SignedOut } from "@clerk/nextjs";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, CheckCircle, Clock, Sparkles } from "lucide-react";
-import { motion } from "framer-motion";
-import { ScrollIndicator } from "./ScrollIndicator";
-import { StatsSection } from "./StatsSection";
-import { PricingSection } from "./PricingSection";
+import { TrustedBy } from "./TrustedBy";
 import { HowItWorks } from "./HowItWorks";
 import { Footer } from "../Footer";
-// import { TrustedBy } from "./TrustedBy";
+import { StoryShowcase } from "./StoryShowcase";
+import { BentoGrid } from "./BentoGrid";
+import { Comparison } from "./Comparison";
+import { motion } from "framer-motion";
+import { Sparkles } from "lucide-react";
 
 export function Hero() {
   return (
-    <div className="dark:bg-black">
-      <div className="relative min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900 via-gray-900 to-black text-white overflow-hidden">
-        <BackgroundEffects />
+    <div className="bg-[#faf9f6] text-stone-900 min-h-screen overflow-hidden font-sans selection:bg-amber-100 selection:text-amber-900">
+      
+      {/* Premium Gradient Mesh Background */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-20%] left-[20%] w-[800px] h-[800px] rounded-full bg-amber-200/20 blur-[120px] animate-blob" />
+        <div className="absolute top-[10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-orange-100/40 blur-[100px] animate-blob animation-delay-2000" />
+        <div className="absolute bottom-[-20%] left-[-10%] w-[800px] h-[800px] rounded-full bg-purple-100/30 blur-[120px] animate-blob animation-delay-4000" />
+      </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 mt-10">
-          <HeroHeader />
+      {/* Noise Texture Overlay */}
+      <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.8 }}
-            className="mt-16 space-y-32"
-          >
-            {/* <TrustedBy /> */}
-
-            <section className="relative">
-              <div className="absolute rounded-3xl inset-0 dark:bg-gradient-to-b from-transparent via-black/5 to-black/20 pointer-events-none" />
-              <ImageCarousel />
-            </section>
-
-            <HowItWorks />
-
-            <StatsSection />
-
-            <section id="features" className="relative">
-              <div className="absolute inset-0 dark:bg-gradient-to-b from-black/20 to-transparent pointer-events-none" />
-              <Features />
-            </section>
-
-            <section className="relative">
-              <div className="absolute inset-0 dark:bg-gradient-to-b from-transparent to-black/20 pointer-events-none" />
-              <Testimonials />
-            </section>
-
-            <PricingSection />
-
-            <motion.section
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.8 }}
-              className="relative py-20"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-red-500/20 blur-3xl dark:from-purple-500/20 dark:via-pink-500/20 dark:to-red-500/20" />
-              <div className="relative text-center max-w-3xl mx-auto space-y-8">
-                <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 dark:from-purple-400 dark:via-pink-500 dark:to-red-500 bg-clip-text text-transparent">
-                  Start Your AI Portrait Journey Today
-                </h2>
-                <p className="text-muted-foreground text-xl">
-                  Join thousands of creators who have already transformed their
-                  photos with our AI technology.
-                </p>
-
-                <SignedOut>
-                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <Button
-                      asChild
-                      size="lg"
-                      className="group bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
-                    >
-                      <SignInButton mode="modal">
-                        <span className="flex items-center">
-                          Get Started Free
-                          <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                        </span>
-                      </SignInButton>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      className="text-black dark:text-white"
-                      onClick={() =>
-                        document
-                          .getElementById("features")
-                          ?.scrollIntoView({ behavior: "smooth" })
-                      }
-                    >
-                      Learn More
-                    </Button>
-                  </div>
-                </SignedOut>
-
-                <div className="pt-8 flex flex-wrap items-center justify-center gap-4 sm:gap-8">
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="flex items-center text-purple-600 dark:text-purple-300">
-                      <CheckCircle className="w-4 h-4 mr-1" />
-                      No credit card required
-                    </span>
-                    <span className="hidden sm:inline text-gray-500">•</span>
-                    <span className="flex items-center text-pink-600 dark:text-pink-300">
-                      <Sparkles className="w-4 h-4 mr-1" />
-                      Free credits to start
-                    </span>
-                    <span className="hidden sm:inline text-gray-500">•</span>
-                    <span className="flex items-center text-red-600 dark:text-red-300">
-                      <Clock className="w-4 h-4 mr-1" />
-                      Cancel anytime
-                    </span>
-                  </div>
-               
-                </div>
-              
-              </div>
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
         
-            </motion.section>
-          </motion.div>
-        </div>
+        <HeroHeader />
 
-        <ScrollIndicator />
-        <Footer/>
+        <motion.div
+          initial={{ opacity: 0, y: 60 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 1, ease: "easeOut" }}
+          className="mt-32 space-y-40"
+        >
+            <StoryShowcase />
+            
+            <BentoGrid />
+            
+            <HowItWorks />
+            
+            <Comparison />
+
+            <TrustedBy />
+
+            <section className="relative py-12">
+                 <div className="text-center max-w-2xl mx-auto mb-16">
+                    <motion.h2 
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6 }}
+                        className="text-4xl md:text-5xl font-serif font-bold text-stone-800 mb-4"
+                    >
+                        More Than Just Images
+                    </motion.h2>
+                    <p className="text-xl text-stone-600 font-light">
+                        We build entire worlds around your child's imagination.
+                    </p>
+                </div>
+                <Features />
+            </section>
+
+            <section className="py-20 text-center relative overflow-hidden rounded-[2.5rem] bg-stone-900 text-amber-50 mx-2 shadow-xl shadow-stone-900/20 group">
+                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10" />
+                <div className="absolute inset-0 bg-gradient-to-br from-stone-800 via-stone-900 to-black opacity-90" />
+                <div className="absolute -top-1/2 right-0 w-[60%] h-full bg-amber-500/20 blur-[120px] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+
+                <div className="relative z-10 max-w-3xl mx-auto px-6 space-y-6">
+                    <div className="inline-flex items-center gap-2 bg-white/10 px-4 py-1.5 rounded-full text-sm uppercase tracking-wider text-amber-200">
+                        <Sparkles className="w-4 h-4" />
+                        Limited Founder Plan
+                    </div>
+                    <h2 className="text-4xl md:text-5xl font-serif font-bold text-amber-50 leading-tight">
+                        Create a bedtime story in under 2 minutes.
+                    </h2>
+                    <p className="text-lg text-stone-300 leading-relaxed">
+                        Upload photos once, generate infinite adventures forever. No design skills needed, just imagination.
+                    </p>
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                        <a href="/dashboard" className="inline-flex h-14 items-center justify-center rounded-full bg-amber-500 px-10 text-lg font-semibold text-stone-900 shadow-lg shadow-amber-500/40 hover:bg-amber-400 transition-all">
+                            Start Free Trial
+                        </a>
+                        <a href="/storybook" className="inline-flex h-14 items-center justify-center rounded-full border border-white/30 px-10 text-lg font-semibold text-white hover:bg-white/10 transition-all">
+                            Explore Storybook Studio
+                        </a>
+                    </div>
+                </div>
+            </section>
+        </motion.div>
+
+        <div className="mt-32 border-t border-stone-200/50 pt-12">
+            <Footer />
+        </div>
       </div>
     </div>
   );

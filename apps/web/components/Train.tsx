@@ -4,10 +4,7 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,23 +17,16 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { UploadModal } from "@/components/ui/upload";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { BACKEND_URL, CLOUDFLARE_URL } from "../app/config";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ImageIcon } from "lucide-react";
+import { X, ImageIcon, CheckCircle2, Info, AlertCircle } from "lucide-react";
 import { useCredits } from "@/hooks/use-credits";
 import Image from "next/image";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
 import JSZip from "jszip";
 
 interface UploadedFile {
@@ -45,17 +35,24 @@ interface UploadedFile {
   timestamp: Date;
 }
 
+const STEPS = [
+  { title: "Upload Photos", description: "5-10 high quality selfies." },
+  { title: "Describe the Hero", description: "Basic characteristics." },
+  { title: "Review & Train", description: "Confirm and start." },
+];
+
 export function Train() {
   const { getToken } = useAuth();
   const [zipUrl, setZipUrl] = useState("");
   const [zipKey, setZipKey] = useState("");
   const [type, setType] = useState("Man");
-  const [age, setAge] = useState<string>("25");
+  const [age, setAge] = useState<string>("5");
   const [ethinicity, setEthinicity] = useState<string>("White");
   const [eyeColor, setEyeColor] = useState<string>("Brown");
   const [bald, setBald] = useState(false);
   const [name, setName] = useState("");
   const [modelTraining, setModelTraining] = useState(false);
+  const [activeStep, setActiveStep] = useState(0);
   const router = useRouter();
   const { credits } = useCredits();
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
@@ -239,299 +236,281 @@ export function Train() {
 
   const isFormValid = name && zipUrl && type && age && ethinicity && eyeColor;
 
+  const nextStep = () => setActiveStep((prev) => Math.min(prev + 1, STEPS.length - 1));
+  const prevStep = () => setActiveStep((prev) => Math.max(prev - 1, 0));
+
   return (
-    <motion.div
-      className="flex flex-col items-center justify-center pt-4 md:px-4"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      <div className="w-full">
-        <div className="flex items-center gap-2 mb-4">
-          <div>
-            <h1 className="md:text-2xl text-xl font-semibold">
-              Train New Model
-            </h1>
-            <p className="md:text-sm text-xs text-muted-foreground">
-              Create a custom AI model with your photos
-            </p>
-          </div>
+    <div className="min-h-screen bg-[#faf9f6] pt-32 pb-20 px-4 flex items-start justify-center">
+      <div className="w-full max-w-4xl">
+        
+        {/* Header */}
+        <div className="mb-10 text-center">
+          <h1 className="text-4xl font-serif font-bold text-stone-900 mb-4">Train Your Hero</h1>
+          <p className="text-stone-500 max-w-lg mx-auto">
+            Create a custom AI model of your child. Upload 5-10 photos, and we&apos;ll teach our AI how to illustrate them in any adventure.
+          </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card className="h-full border-none shadow-none ">
-            <CardContent className="p-0">
-              <motion.div
-                className="grid gap-6"
-                initial="hidden"
-                animate="visible"
-                variants={{
-                  hidden: { opacity: 0 },
-                  visible: {
-                    opacity: 1,
-                    transition: {
-                      staggerChildren: 0.1,
-                    },
-                  },
-                }}
-              >
-                <div className="space-y-2">
-                  <Label htmlFor="name">Model Name</Label>
-                  <Input
-                    id="name"
-                    placeholder="Enter model name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
+        {/* Progress Steps */}
+        <div className="flex justify-between items-center mb-12 max-w-2xl mx-auto px-4">
+          {STEPS.map((step, index) => {
+            const isActive = index === activeStep;
+            const isCompleted = index < activeStep;
+            
+            return (
+              <div key={step.title} className="flex flex-col items-center relative z-10">
+                <div 
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 mb-2
+                    ${isActive ? "bg-stone-900 text-white scale-110 shadow-lg" : 
+                      isCompleted ? "bg-green-500 text-white" : "bg-stone-200 text-stone-400"}`}
+                >
+                  {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : index + 1}
                 </div>
+                <span className={`text-xs font-medium transition-colors duration-300 ${isActive ? "text-stone-900" : "text-stone-400"}`}>
+                  {step.title}
+                </span>
+              </div>
+            );
+          })}
+          {/* Progress Bar Background */}
+          <div className="absolute left-0 right-0 top-5 h-[2px] bg-stone-200 -z-0 hidden md:block max-w-2xl mx-auto" />
+          {/* Active Progress Bar */}
+           <div 
+            className="absolute left-0 top-5 h-[2px] bg-stone-900 -z-0 hidden md:block max-w-2xl mx-auto transition-all duration-500" 
+            style={{ width: `${(activeStep / (STEPS.length - 1)) * 100}%` }}
+          />
+        </div>
 
-                <div className="grid grid-cols-4 gap-4">
-                  <div className="space-y-2 col-span-2">
-                    <Label>Type</Label>
-                    <Select value={type} onValueChange={setType}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Man">Man</SelectItem>
-                        <SelectItem value="Woman">Woman</SelectItem>
-                        <SelectItem value="Others">Others</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="age">Age</Label>
-                    <Input
-                      id="age"
-                      type="number"
-                      placeholder="Enter age"
-                      value={age}
-                      onChange={(e) => setAge(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Bald</Label>
-                    <div className="flex items-center space-x-2 pt-2">
-                      <Switch
-                        className="data-[state=checked]:bg-green-400 data-[state=unchecked]:bg-input"
-                        checked={bald}
-                        onCheckedChange={setBald}
-                      />
-                      <span className="text-sm text-muted-foreground">
-                        {bald ? "Yes" : "No"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Ethnicity</Label>
-                    <Select value={ethinicity} onValueChange={setEthinicity}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select ethnicity" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="White">White</SelectItem>
-                        <SelectItem value="Black">Black</SelectItem>
-                        <SelectItem value="Asian_American">
-                          Asian American
-                        </SelectItem>
-                        <SelectItem value="East_Asian">East Asian</SelectItem>
-                        <SelectItem value="South_East_Asian">
-                          South East Asian
-                        </SelectItem>
-                        <SelectItem value="South_Asian">South Asian</SelectItem>
-                        <SelectItem value="Middle_Eastern">
-                          Middle Eastern
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Eye Color</Label>
-                    <Select value={eyeColor} onValueChange={setEyeColor}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select eye color" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Brown">Brown</SelectItem>
-                        <SelectItem value="Blue">Blue</SelectItem>
-                        <SelectItem value="Hazel">Hazel</SelectItem>
-                        <SelectItem value="Gray">Gray</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <UploadModal
-                    handleUpload={handleUpload}
-                    isUploading={isUploading}
-                    uploadProgress={uploadProgress}
-                  />
-                  <AnimatePresence>
-                    {uploadedFiles.length > 0 && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="my-4 space-y-2"
-                      >
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                            Uploaded Files ({uploadedFiles.length})
-                          </p>
-                          {uploadedFiles.length > 1 && (
-                            <button
-                              onClick={() => {
-                                setUploadedFiles([]);
-                                setZipUrl("");
-                                setZipKey("");
-                              }}
-                              className="text-xs text-red-500 cursor-pointer bg-red-500/20 border border-red-500/60 px-3 py-1 rounded-lg font-semibold hover:text-red-600 transition-colors"
-                            >
-                              Remove all
-                            </button>
-                          )}
+        <Card className="border-none shadow-xl bg-white rounded-[2rem] overflow-hidden">
+          <div className="grid md:grid-cols-12 min-h-[500px]">
+            
+            {/* Left Panel: Form */}
+            <div className="md:col-span-7 p-8 md:p-10 flex flex-col">
+              <div className="flex-1">
+                <AnimatePresence mode="wait">
+                  
+                  {/* Step 1: Upload */}
+                  {activeStep === 0 && (
+                    <motion.div
+                      key="step1"
+                      initial={{ opacity: 0, x: 10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      className="space-y-6"
+                    >
+                      <div className="space-y-2">
+                        <h2 className="text-2xl font-serif font-bold text-stone-900">Upload Photos</h2>
+                        <div className="flex gap-2 text-sm text-stone-500 bg-blue-50 p-3 rounded-xl border border-blue-100">
+                          <Info className="w-5 h-5 text-blue-500 flex-shrink-0" />
+                          <p>Best results: Close-ups, different angles, good lighting. Avoid sunglasses or hats.</p>
                         </div>
-                        <div className="max-h-32 overflow-y-auto space-y-1 scrollbar-thin scrollbar-thumb-neutral-200 dark:scrollbar-thumb-neutral-800">
-                          <AnimatePresence>
-                            {uploadedFiles.map((file, index) => (
-                              <motion.div
-                                key={`${file.name}-${index}`}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: 20 }}
-                                transition={{ duration: 0.2 }}
-                                className="flex items-center justify-between text-sm p-2 rounded-md 
-                                           bg-neutral-50 dark:bg-neutral-900 group hover:bg-neutral-100 
-                                           dark:hover:bg-neutral-800 transition-colors"
-                              >
-                                <div className="flex items-center space-x-2">
-                                  <motion.svg
-                                    className="w-4 h-4 text-green-500 flex-shrink-0"
-                                    fill="none"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="2"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                    initial={{ scale: 0 }}
-                                    animate={{ scale: 1 }}
-                                    transition={{ delay: 0.2 }}
-                                  >
-                                    <path d="M5 13l4 4L19 7" />
-                                  </motion.svg>
-                                  <span
-                                    className="truncate max-w-[200px]"
-                                    title={file.name}
-                                  >
+                      </div>
+
+                      <UploadModal handleUpload={handleUpload} isUploading={isUploading} uploadProgress={uploadProgress} />
+
+                      {uploadedFiles.length > 0 && (
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium text-stone-900">Uploaded ({uploadedFiles.length})</p>
+                          <div className="grid grid-cols-3 gap-2">
+                            {uploadedFiles.slice(0, 6).map((file, i) => (
+                                <div key={i} className="bg-stone-50 rounded-lg p-2 text-xs truncate text-stone-500 border border-stone-100">
                                     {file.name}
-                                  </span>
                                 </div>
-                                <div className="flex items-center space-x-2">
-                                  <span className="text-xs text-neutral-500">
-                                    {new Date(
-                                      file.timestamp
-                                    ).toLocaleTimeString()}
-                                  </span>
-                                  <button
-                                    onClick={() => handleRemoveFile(index)}
-                                    className="p-1 rounded-full hover:bg-neutral-200 cursor-pointer dark:hover:bg-neutral-700 
-                                               text-neutral-400 hover:text-red-500 transition-all
-                                               opacity-0 group-hover:opacity-100 focus:opacity-100
-                                               focus:outline-none focus:ring-2 focus:ring-red-500/20"
-                                    title="Remove file"
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </button>
-                                </div>
-                              </motion.div>
                             ))}
-                          </AnimatePresence>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </motion.div>
-            </CardContent>
-            <CardFooter className="flex justify-end px-0">
-              <Button
-                onClick={trainModal}
-                disabled={modelTraining || !isFormValid}
-                className="gap-2"
-              >
-                {modelTraining ? (
-                  <>
-                    {trainingStatus
-                      ? `Training: ${trainingStatus}...`
-                      : "Training..."}
-                  </>
-                ) : (
-                  <>Train Model (20 credits)</>
-                )}
-              </Button>
-            </CardFooter>
-          </Card>
-
-          <Card className="h-full border-l-0 md:border-l border-r-0 border-t-0 border-b-0 shadow-none rounded-none">
-            <CardHeader>
-              <CardTitle>Image Preview</CardTitle>
-              <CardDescription>Preview of your uploaded images</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center w-full h-full">
-              {previewFiles.length > 0 ? (
-                <Carousel className="w-full md:max-w-md max-w-xs">
-                  <CarouselContent>
-                    {previewFiles.map((file, index) => {
-                      const imageUrl = URL.createObjectURL(file);
-                      return (
-                        <CarouselItem key={index}>
-                          <div className="p-1">
-                            <div className="flex flex-col items-center p-2">
-                              <div className="relative aspect-square w-full md:max-w-[400px] max-w-[200px] overflow-hidden rounded-xl">
-                                <Image
-                                  src={imageUrl}
-                                  alt={file.name}
-                                  fill
-                                  className="object-cover"
-                                  onLoad={() => URL.revokeObjectURL(imageUrl)}
-                                />
-                              </div>
-                              <p className="mt-2 text-sm font-medium text-center truncate max-w-[250px]">
-                                {file.name}
-                              </p>
-                            </div>
+                            {uploadedFiles.length > 6 && (
+                                <div className="bg-stone-50 rounded-lg p-2 text-xs text-stone-500 border border-stone-100 flex items-center justify-center">
+                                    +{uploadedFiles.length - 6} more
+                                </div>
+                            )}
                           </div>
-                        </CarouselItem>
-                      );
-                    })}
-                  </CarouselContent>
-                  <CarouselPrevious className="left-2" />
-                  <CarouselNext className="right-2" />
-                </Carousel>
-              ) : (
-                <div className="flex flex-col items-center justify-center p-6 text-center">
-                  <div className="flex h-40 w-40 items-center justify-center rounded-full bg-muted mb-4">
-                    <ImageIcon className="h-20 w-20 text-muted-foreground" />
-                  </div>
-                  <h3 className="text-lg font-medium">No images uploaded</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Upload images using the form on the left to see previews
-                    here
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+
+                  {/* Step 2: Details */}
+                  {activeStep === 1 && (
+                    <motion.div
+                      key="step2"
+                      initial={{ opacity: 0, x: 10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      className="space-y-6"
+                    >
+                      <div className="space-y-2">
+                        <h2 className="text-2xl font-serif font-bold text-stone-900">Describe the Hero</h2>
+                        <p className="text-stone-500">Help the AI understand the physical traits.</p>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label>Child&apos;s Name</Label>
+                            <Input 
+                                placeholder="e.g. Leo" 
+                                value={name} 
+                                onChange={(e) => setName(e.target.value)} 
+                                className="h-12 text-lg bg-stone-50 border-stone-200 focus:border-stone-900 focus:ring-0 rounded-xl"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label>Age</Label>
+                                <Input type="number" value={age} onChange={(e) => setAge(e.target.value)} className="h-12 rounded-xl bg-stone-50" />
+                            </div>
+                             <div className="space-y-2">
+                                <Label>Eye Color</Label>
+                                <Select value={eyeColor} onValueChange={setEyeColor}>
+                                    <SelectTrigger className="h-12 rounded-xl bg-stone-50"><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                        {["Brown", "Blue", "Hazel", "Green", "Gray"].map(c => (
+                                            <SelectItem key={c} value={c}>{c}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label>Ethnicity</Label>
+                                <Select value={ethinicity} onValueChange={setEthinicity}>
+                                    <SelectTrigger className="h-12 rounded-xl bg-stone-50"><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                        {["White", "Black", "Asian", "Hispanic", "Middle Eastern", "Mixed"].map(c => (
+                                            <SelectItem key={c} value={c}>{c}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Hair Length</Label>
+                                <Select value={type} onValueChange={setType}>
+                                    <SelectTrigger className="h-12 rounded-xl bg-stone-50"><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Man">Short Hair</SelectItem>
+                                        <SelectItem value="Woman">Long Hair</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* Step 3: Review */}
+                  {activeStep === 2 && (
+                    <motion.div
+                      key="step3"
+                      initial={{ opacity: 0, x: 10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      className="space-y-6"
+                    >
+                      <div className="space-y-2">
+                        <h2 className="text-2xl font-serif font-bold text-stone-900">Ready to Train?</h2>
+                        <p className="text-stone-500">Double check the details below.</p>
+                      </div>
+
+                      <div className="bg-stone-50 rounded-2xl p-6 space-y-4 border border-stone-100">
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <p className="text-stone-400 text-xs uppercase tracking-wide">Name</p>
+                                <p className="font-medium text-stone-900 text-lg">{name}</p>
+                            </div>
+                            <div>
+                                <p className="text-stone-400 text-xs uppercase tracking-wide">Photos</p>
+                                <p className="font-medium text-stone-900 text-lg">{uploadedFiles.length} files</p>
+                            </div>
+                            <div>
+                                <p className="text-stone-400 text-xs uppercase tracking-wide">Age</p>
+                                <p className="font-medium text-stone-900">{age} years</p>
+                            </div>
+                            <div>
+                                <p className="text-stone-400 text-xs uppercase tracking-wide">Eyes</p>
+                                <p className="font-medium text-stone-900">{eyeColor}</p>
+                            </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3 bg-amber-50 text-amber-800 p-4 rounded-xl text-sm">
+                        <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <p>Training costs <strong>20 credits</strong> and takes about <strong>20 minutes</strong>. You&apos;ll be notified when your model is ready to star in stories.</p>
+                      </div>
+                    </motion.div>
+                  )}
+
+                </AnimatePresence>
+              </div>
+
+              {/* Navigation Buttons */}
+              <div className="pt-8 mt-8 border-t border-stone-100 flex justify-between">
+                 <Button 
+                    variant="ghost" 
+                    onClick={prevStep} 
+                    disabled={activeStep === 0 || modelTraining}
+                    className="text-stone-500 hover:text-stone-900"
+                 >
+                    Back
+                 </Button>
+                 
+                 {activeStep < 2 ? (
+                    <Button 
+                        onClick={nextStep} 
+                        disabled={(activeStep === 0 && uploadedFiles.length === 0) || (activeStep === 1 && !name)}
+                        className="bg-stone-900 text-white hover:bg-stone-800 px-8 rounded-full"
+                    >
+                        Continue
+                    </Button>
+                 ) : (
+                    <Button 
+                        onClick={trainModal} 
+                        disabled={modelTraining}
+                        className="bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:opacity-90 px-8 rounded-full shadow-lg shadow-orange-200"
+                    >
+                        {modelTraining ? "Starting Engine..." : `Start Training (${credits} credits)`}
+                    </Button>
+                 )}
+              </div>
+            </div>
+
+            {/* Right Panel: Visuals */}
+            <div className="md:col-span-5 bg-stone-50 border-l border-stone-100 p-8 flex flex-col items-center justify-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cube-coat.png')] opacity-5"></div>
+                
+                {previewFiles.length > 0 ? (
+                    <div className="relative z-10 w-full max-w-xs">
+                        <p className="text-center text-xs font-bold uppercase tracking-widest text-stone-400 mb-6">Preview</p>
+                        <div className="grid grid-cols-2 gap-3 rotate-2 hover:rotate-0 transition-transform duration-500">
+                            {previewFiles.slice(0, 4).map((file, i) => (
+                                <div key={i} className="aspect-square rounded-2xl overflow-hidden shadow-md border-2 border-white">
+                                    <Image
+                                        src={URL.createObjectURL(file)}
+                                        alt="Preview"
+                                        width={150}
+                                        height={150}
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                         <p className="text-center text-stone-400 text-xs mt-6">
+                            {previewFiles.length} images selected
+                        </p>
+                    </div>
+                ) : (
+                     <div className="text-center z-10 opacity-40">
+                        <div className="w-24 h-24 bg-stone-200 rounded-full mx-auto mb-4 flex items-center justify-center">
+                            <ImageIcon className="w-10 h-10 text-stone-400" />
+                        </div>
+                        <p className="font-serif text-xl text-stone-400">Your Hero<br/>Starts Here</p>
+                    </div>
+                )}
+            </div>
+
+          </div>
+        </Card>
       </div>
-    </motion.div>
+    </div>
   );
 }

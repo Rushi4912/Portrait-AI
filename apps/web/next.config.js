@@ -22,9 +22,16 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'v3.fal.media',
       },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'api.dicebear.com',
+      },
     ],
   },
 };
   
-  export default nextConfig;
-  
+export default nextConfig;
