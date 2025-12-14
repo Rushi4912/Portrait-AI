@@ -23,8 +23,8 @@ model User {
   referralsReceived ReferralProgram[] @relation("Referred")
   educationalDiscount EducationalDiscount?
   supportTickets    SupportTicket[]
-  giftSubscriptionsSent GiftSubscription[]
-  giftSubscriptionsReceived GiftSubscription[]
+  giftSubscriptionsSent GiftSubscription[] @relation("GiftSender")
+  giftSubscriptionsReceived GiftSubscription[] @relation("GiftRecipient")
   
   // Existing relations...
   models            Model[]
@@ -52,6 +52,7 @@ model Model {
   eyeColor        EyeColorEnum
   bald            Boolean
   userId          String
+  user            User        @relation(fields: [userId], references: [id])
   triggerWord     String?
   tensorPath      String?
   thumbnail       String?
@@ -80,6 +81,7 @@ model OutputImages {
   imageUrl  String  @default("")
   modelId   String
   userId    String
+  user      User    @relation(fields: [userId], references: [id])
   prompt    String
   falAiRequestId    String?
   status    OutputImageStatusEnum   @default(Pending)
@@ -298,14 +300,16 @@ model GiftSubscription {
   message           String?   @db.Text
   code              String    @unique
   isRedeemed        Boolean   @default(false)
-  redeemedBy        String?   // user ID who redeemed
+  recipientId       String?   // user ID who redeemed
   expiresAt         DateTime
   createdAt         DateTime  @default(now())
   redeemedAt        DateTime?
   
-  sender            User      @relation(fields: [senderId], references: [id])
+  sender            User      @relation("GiftSender", fields: [senderId], references: [id])
+  recipient         User?     @relation("GiftRecipient", fields: [recipientId], references: [id])
   
   @@index([code])
+  @@index([recipientId])
   @@index([senderId])
   @@index([recipientEmail])
 }
@@ -333,6 +337,7 @@ model BusinessAnalytics {
 enum PlanType {
   basic
   premium
+  family
 }
 
 enum ModelTypeEnum {
@@ -363,6 +368,7 @@ enum EyeColorEnum {
 model UserCredit {
   id        String   @id @default(cuid())
   userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
   amount    Int      @default(20)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -379,6 +385,7 @@ enum TransactionStatus {
 model Transaction {
   id          String           @id @default(cuid())
   userId      String
+  user        User             @relation(fields: [userId], references: [id])
   amount      Int
   currency    String
   paymentId   String
@@ -396,10 +403,12 @@ model Story {
   id          String   @id @default(uuid())
   title       String
   userId      String
+  user        User     @relation(fields: [userId], references: [id])
   modelId     String
   model       Model    @relation(fields: [modelId], references: [id])
   status      StoryStatusEnum @default(Pending)
   pages       StoryPage[]
+  analytics   StoryAnalytics?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
@@ -411,6 +420,10 @@ model Story {
   dedication  String?
   templateId  String?
   template    StoryTemplate? @relation(fields: [templateId], references: [id])
+  
+  // Audio narration settings
+  includeAudio Boolean @default(false)
+  voiceId      String? // ElevenLabs voice ID
   
   // Sharing & visibility
   isPublic    Boolean @default(false)
@@ -522,6 +535,7 @@ model StoryPage {
   pageNumber     Int
   content        String   @db.Text
   imageUrl       String?
+  audioUrl       String?
   imagePrompt    String
   falAiRequestId String?
   status         OutputImageStatusEnum @default(Pending)

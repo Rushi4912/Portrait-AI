@@ -19,12 +19,12 @@ import { Switch } from "@/components/ui/switch";
 import { UploadModal } from "@/components/ui/upload";
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import { BACKEND_URL, CLOUDFLARE_URL } from "../app/config";
+import { BACKEND_URL, CLOUDFLARE_URL } from "../../../app/config";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "@/hooks/useAuth";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ImageIcon, CheckCircle2, Info, AlertCircle } from "lucide-react";
+import { X, ImageIcon, CheckCircle2, Info, AlertCircle, Coins } from "lucide-react";
 import { useCredits } from "@/hooks/use-credits";
 import Image from "next/image";
 import JSZip from "jszip";
@@ -54,7 +54,7 @@ export function Train() {
   const [modelTraining, setModelTraining] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
   const router = useRouter();
-  const { credits } = useCredits();
+  const { credits, loading: creditsLoading } = useCredits();
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [previewFiles, setPreviewFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -111,7 +111,6 @@ export function Train() {
       router.push("/pricing");
       return;
     }
-
     if (!zipUrl) {
       toast.error("Please upload images first");
       return;
@@ -176,6 +175,11 @@ export function Train() {
   };
 
   const handleUpload = async (files: File[]) => {
+    if (files.length < 5) {
+      toast.error("Please upload at least 5 photos for best results");
+      return;
+    }
+    
     if (files.length > 50) {
       toast.error("Maximum 50 images allowed");
       return;
@@ -186,8 +190,12 @@ export function Train() {
     setPreviewFiles(files);
 
     try {
-      const res = await axios.get(`${BACKEND_URL}/pre-signed-url`);
-      const { url, key } = res.data;
+      const token = await getToken();
+      if (!token) {
+        toast.error("Please sign in to upload images");
+        setIsUploading(false);
+        return;
+      }
 
       const zip = new JSZip();
       const fileNames: string[] = [];
@@ -199,35 +207,69 @@ export function Train() {
       }
 
       const content = await zip.generateAsync({ type: "blob" });
+      const arrayBuffer = await content.arrayBuffer();
 
-      await axios.put(url, content, {
-        headers: {
-          "Content-Type": "application/zip",
-        },
-        onUploadProgress: (progressEvent) => {
-          setUploadProgress(
-            50 + Math.round((progressEvent.loaded * 50) / progressEvent.total!)
-          );
-        },
-      });
+      const uploadResponse = await axios.post(
+        `${BACKEND_URL}/upload/model`,
+        arrayBuffer,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/zip",
+          },
+          onUploadProgress: (progressEvent) => {
+            const total = progressEvent.total || arrayBuffer.byteLength;
+            setUploadProgress(
+              50 + Math.round((progressEvent.loaded * 50) / total)
+            );
+          },
+        }
+      );
 
-      const fullZipUrl = `${CLOUDFLARE_URL}/${key}`;
+      const { url: uploadedUrl, key } = uploadResponse.data || {};
+      if (!uploadedUrl && !key) {
+        throw new Error("Upload succeeded but missing file reference");
+      }
+
+      const fallbackBase = CLOUDFLARE_URL.replace(/\/$/, "");
+      const fullZipUrl = uploadedUrl || `${fallbackBase}/${key}`;
+
       setZipUrl(fullZipUrl);
       setZipKey(key);
 
       setUploadedFiles((prev) => [
         ...prev,
-        ...fileNames.map((name) => ({
-          name,
+        ...fileNames.map((fileName) => ({
+          name: fileName,
           status: "uploaded" as const,
           timestamp: new Date(),
         })),
       ]);
 
-      toast.success("Images uploaded successfully!");
-    } catch (error) {
+      toast.success(`${fileNames.length} photos uploaded successfully!`);
+    } catch (error: any) {
       console.error("Upload failed:", error);
-      toast.error("Failed to upload images. Please try again.");
+      
+      // Provide specific error messages
+      if (error.response?.status === 401) {
+        toast.error("Please sign in to upload images");
+      } else if (error.response?.status === 403) {
+        toast.error("Authentication failed. Please check your backend CLERK_JWT_PUBLIC_KEY.");
+        console.error("Auth Error Details:", error.response.data);
+      } else if (error.response?.status === 500) {
+        const errorMsg = error.response?.data?.message || error.response?.data?.error;
+        if (errorMsg?.toLowerCase().includes("storage not configured")) {
+          toast.error("Storage is not configured. Please contact support.");
+        } else if (errorMsg) {
+          toast.error(errorMsg);
+        } else {
+          toast.error("Server error. Please try again later.");
+        }
+      } else if (error.code === "ERR_NETWORK") {
+        toast.error("Network error. Please check your connection.");
+      } else {
+        toast.error("Failed to upload images. Please try again.");
+      }
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
@@ -245,6 +287,15 @@ export function Train() {
         
         {/* Header */}
         <div className="mb-10 text-center">
+          <div className="flex justify-center mb-4">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-100 to-orange-100 rounded-full border border-amber-200">
+              <Coins className="w-5 h-5 text-amber-600" />
+              <span className="font-bold text-amber-700">
+                {creditsLoading ? "..." : credits}
+              </span>
+              <span className="text-amber-600 text-sm">credits available</span>
+            </div>
+          </div>
           <h1 className="text-4xl font-serif font-bold text-stone-900 mb-4">Train Your Hero</h1>
           <p className="text-stone-500 max-w-lg mx-auto">
             Create a custom AI model of your child. Upload 5-10 photos, and we&apos;ll teach our AI how to illustrate them in any adventure.

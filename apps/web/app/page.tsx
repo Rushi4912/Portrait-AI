@@ -1,23 +1,21 @@
 "use client";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Hero } from "@/components/home/Hero";
-import { useAuth } from "@/hooks/useAuth";
 
+import { Hero } from "@/components/home/Hero";
+import { Process } from "@/components/home/Process";
+import { Benefits } from "@/components/home/Benefits";
+import { FeaturesSection } from "@/components/home/FeaturesSection";
+import { MagicEngine } from "@/components/home/MagicEngine";
+import { FAQ } from "@/components/home/FAQ";
 
 export default function Home() {
-  const { user } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (user) {
-      router.replace("/dashboard");
-    }
-  }, [user, router]);
-
   return (
-    <div>
+    <div className="min-h-screen bg-[#faf9f6]">
       <Hero />
+      <div id="process"><Process /></div>
+      <div id="benefits"><Benefits /></div>
+      <div id="features"><FeaturesSection /></div>
+      <div id="magic"><MagicEngine /></div>
+      <div id="faq"><FAQ /></div>
     </div>
   );
 }

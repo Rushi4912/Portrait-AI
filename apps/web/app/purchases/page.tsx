@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import TransactionsPage from "@/components/payment/PurchasesPage";
+import TransactionsPage from "@/features/payments/components/PurchasesPage";
 import React from "react";
 import { auth } from "@clerk/nextjs/server";
 

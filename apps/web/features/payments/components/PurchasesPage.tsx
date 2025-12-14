@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTransactions } from "@/hooks/useTransactions";
-import { TransactionStatus } from "../../types";
+import { TransactionStatus } from "@/types";
 
 export default function TransactionsPage() {
   const [searchQuery, setSearchQuery] = useState("");

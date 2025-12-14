@@ -2,6 +2,11 @@
 
 This Turborepo starter is maintained by the Turborepo core team.
 
+## Requirements
+
+- Node.js >= 22.11.0 (latest LTS)
+- npm >= 10.8 (bundled with Node 22)
+
 ## Using this example
 
 Run the following command:

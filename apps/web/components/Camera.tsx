@@ -1,7 +1,7 @@
 "use client";
 
-import { useAuth } from "@clerk/nextjs";
-// import { BACKEND_URL } from "@/app/config";
+import { useAuth } from "@/hooks/useAuth";
+import { BACKEND_URL } from "../app/config";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { ImageCard } from "./Imagecard";
@@ -41,7 +41,7 @@ export function Camera() {
   };
 
   const fetchImages = async () => {
-    const baseurl = "http://localhost:8080";
+    const baseurl = BACKEND_URL;
 
     try {
       const token = await getToken();

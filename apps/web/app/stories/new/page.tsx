@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "@/hooks/useAuth";
 import axios from "axios";
 import { BACKEND_URL } from "../../config";
 import { Button } from "@/components/ui/button";

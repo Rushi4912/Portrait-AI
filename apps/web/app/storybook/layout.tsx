@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 import { Appbar } from "@/components/Appbar";
-import { StorybookNav } from "@/components/StorybookNav";
+import { StorybookNav } from "@/features/storybook";
 
 export default function StorybookLayout({ children }: { children: ReactNode }) {
   return (

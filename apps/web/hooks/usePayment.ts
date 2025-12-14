@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
-// import { BACKEND_URL } from "@/app/config";
+import { useAuth } from "@/hooks/useAuth";
 import { RazorpayResponse } from "../types";
+import { BACKEND_URL } from "../app/config";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_KEY!);
-const apiUrl = "http://localhost:8080";
+const apiUrl = BACKEND_URL;
 
 // Create an event bus for credit updates
 export const creditUpdateEvent = new EventTarget();

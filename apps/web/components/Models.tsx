@@ -1,19 +1,21 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useAuth } from "@clerk/nextjs";
-import axios from "axios";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { BACKEND_URL } from "../app/config";
+import { Button } from "./ui/button";
 
 interface TModel {
   id: string;
-  thumbnail: string;
+  thumbnail: string | null;
   name: string;
-  trainingStatus: "Generated" | "Pending";
+  trainingStatus: "Generated" | "Pending" | "Failed";
+  open?: boolean;
 }
 
 export function SelectModel({
@@ -23,46 +25,97 @@ export function SelectModel({
   setSelectedModel: (model: string) => void;
   selectedModel?: string;
 }) {
-  const { getToken } = useAuth();
-  const [modelLoading, setModelLoading] = useState(true); 
+  const { getToken, isSignedIn } = useAuth();
+  const [modelLoading, setModelLoading] = useState(true);
   const [models, setModels] = useState<TModel[]>([]);
-  const [error, setError] = useState<string | null>(null); 
-  const baseurl = "http://localhost:8080";
+  const [error, setError] = useState<string | null>(null);
+  const isMounted = useRef(true);
+  const fetchingRef = useRef(false);
+  const hasAutoSelected = useRef(false);
+
+  const fetchModels = async () => {
+    // Prevent concurrent fetches
+    if (fetchingRef.current) {
+      return;
+    }
+
+    if (!isSignedIn) {
+      setModelLoading(false);
+      return;
+    }
+
+    try {
+      fetchingRef.current = true;
+      setModelLoading(true);
+      setError(null);
+
+      const token = await getToken();
+
+      if (!token) {
+        setError("Authentication required. Please sign in.");
+        setModelLoading(false);
+        return;
+      }
+
+      const response = await fetch(`${BACKEND_URL}/models`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+      });
+
+      if (!isMounted.current) return;
+
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          setError("Authentication failed. Please sign in again.");
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          setError(errorData.message || "Failed to load models");
+        }
+        return;
+      }
+
+      const data = await response.json();
+      const fetchedModels = data.models || [];
+      setModels(fetchedModels);
+
+      // Auto-select first generated model if none selected (only once)
+      if (!hasAutoSelected.current && !selectedModel && fetchedModels.length > 0) {
+        const generatedModels = fetchedModels.filter(
+          (m: TModel) => m.trainingStatus === "Generated"
+        );
+        if (generatedModels.length > 0) {
+          hasAutoSelected.current = true;
+          setSelectedModel(generatedModels[0].id);
+        }
+      }
+    } catch (err) {
+      if (!isMounted.current) return;
+      setError("Network error. Please check your connection.");
+    } finally {
+      fetchingRef.current = false;
+      if (isMounted.current) {
+        setModelLoading(false);
+      }
+    }
+  };
 
   useEffect(() => {
-    const fetchModels = async () => {
-      try {
-        setModelLoading(true); 
-        setError(null); 
-        
-        const token = await getToken();
-        console.log(token); 
-        
-        const response = await axios.get(`${baseurl}/models`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        
-        console.log("Models response:", response.data); 
-        
-        setModels(response.data.models || []);
-        
-        // Only set selected model if we have models
-        // if (response.data.models && response.data.models.length > 0) {
-        //   setSelectedModel(response.data.models[0]?.id);
-        // }
-        setSelectedModel(response.data.models[0]?.id);
-      } catch (error) {
-        console.error("Failed to fetch models:", error); 
-        setError("Failed to load models");
-      } finally {
-        setModelLoading(false); 
-      }
-    };
+    isMounted.current = true;
+
+    // Only fetch if signed in
+    if (!isSignedIn) {
+      setModelLoading(false);
+      return;
+    }
 
     fetchModels();
-  }, []);
+
+    return () => {
+      isMounted.current = false;
+    };
+  }, [isSignedIn]); // Only depend on isSignedIn, not fetchModels
 
   const container = {
     hidden: { opacity: 0 },
@@ -79,18 +132,23 @@ export function SelectModel({
     show: { opacity: 1, y: 0 },
   };
 
-  // ✅ Show error state
+  // Show error state with retry button
   if (error) {
     return (
       <div className="space-y-6">
-        <div className="flex flex-col items-center justify-center p-12 rounded-lg border border-dashed border-red-200">
-          <p className="text-red-500">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="mt-2 text-sm text-blue-500 hover:underline"
+        <div className="flex flex-col items-center justify-center p-12 rounded-lg border border-dashed border-red-200 bg-red-50/50">
+          <AlertCircle className="h-10 w-10 text-red-400 mb-3" />
+          <p className="text-red-600 font-medium mb-2">Failed to load models</p>
+          <p className="text-red-500 text-sm mb-4">{error}</p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchModels}
+            className="gap-2"
           >
+            <RefreshCw className="h-4 w-4" />
             Try again
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -140,18 +198,31 @@ export function SelectModel({
                   onClick={() => setSelectedModel(model.id)}
                 >
                   <div className="relative aspect-square">
-                    <Image
-                      src={model.thumbnail}
-                      alt={`Thumbnail for ${model.name}`}
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
+                    {model.thumbnail ? (
+                      <Image
+                        src={model.thumbnail}
+                        alt={`Thumbnail for ${model.name}`}
+                        fill
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-100 to-orange-100">
+                        <span className="text-4xl font-bold text-amber-600">
+                          {model.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     <div className="absolute bottom-0 left-0 right-0 p-4">
                       <div className="flex items-center justify-between">
                         <h3 className="text-lg font-semibold text-white">
                           {model.name}
                         </h3>
+                        {model.open && (
+                          <Badge variant="secondary" className="text-xs bg-white/20 text-white">
+                            Public
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -175,12 +246,6 @@ export function SelectModel({
         </motion.div>
       )}
       
-      {process.env.NODE_ENV === 'development' && (
-        <div className="mt-4 p-2 bg-gray-100 rounded text-xs">
-          <p>Debug: Found {models.length} total models</p>
-          <p>Generated models: {models.filter(m => m.trainingStatus === "Generated").length}</p>
-        </div>
-      )}
     </div>
   );
 }

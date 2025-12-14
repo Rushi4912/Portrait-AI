@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
-import { BACKEND_URL } from "../../app/config";
-import { useAuth } from "@clerk/nextjs";
+import { BACKEND_URL } from "../../../app/config";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Shield,
   CheckCircle,

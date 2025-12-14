@@ -1,8 +1,8 @@
-// import { BACKEND_URL } from "@/app/config";
 import { Transaction } from "../types";
 import axios, { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 import { useAuth } from "./useAuth";
+import { BACKEND_URL } from "../app/config";
 
 export const useTransactions = () => {
   const { getToken } = useAuth();
@@ -13,7 +13,7 @@ export const useTransactions = () => {
   const fetchTransactions = async () => {
     setIsLoading(true);
     const token = await getToken();
-    const baseurl = "http://localhost:8080";
+    const baseurl = BACKEND_URL;
 
     if (!token) return;
 

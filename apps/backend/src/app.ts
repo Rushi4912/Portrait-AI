@@ -5,6 +5,7 @@ import helmet from "helmet";
 import pinoHttp from "pino-http";
 import { env } from "./config/env";
 import { logger } from "./lib/logger";
+import { prismaClient } from "./lib/prisma";
 import { initSentry, sentryRequestHandler, sentryErrorHandler } from "./lib/sentry";
 import { apiLimiter } from "./middleware/rateLimiter";
 import { notFoundHandler, errorHandler } from "./middleware/error-handler";
@@ -34,8 +35,24 @@ export function createApp() {
   app.use(express.urlencoded({ extended: true }));
   app.use(apiLimiter);
 
-  app.get("/healthz", (_req, res) => {
-    res.json({ status: "ok", env: env.NODE_ENV });
+  app.get("/healthz", async (_req, res) => {
+    try {
+      // Test database connection
+      await prismaClient.$queryRaw`SELECT 1`;
+      res.json({ 
+        status: "ok", 
+        env: env.NODE_ENV,
+        database: "connected"
+      });
+    } catch (error) {
+      logger.error({ error }, "Health check failed - database not connected");
+      res.status(503).json({ 
+        status: "error", 
+        env: env.NODE_ENV,
+        database: "disconnected",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
   });
 
   app.use("/api/webhook", webhookRouter);

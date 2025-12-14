@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { Textarea } from "@/components/ui/textarea";

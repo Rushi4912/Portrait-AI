@@ -1,7 +1,6 @@
 "use client";
 
-// import { BACKEND_URL } from "@/app/config";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "@/hooks/useAuth";
 import axios from "axios";
 import Image from "next/image";
 import toast from "react-hot-toast";
@@ -20,6 +19,7 @@ import {
   CarouselPrevious,
 } from "./ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
+import { BACKEND_URL } from "../app/config";
 
 export interface TPack {
   id: string;
@@ -65,7 +65,7 @@ export function PackCard(props: TPack & { selectedModelId: string }) {
   };
 
   const generatePack = async () => {
-    const baseurl = "http://localhost:8080";
+    const baseurl = BACKEND_URL;
 
     const token = await getToken();
     await axios.post(

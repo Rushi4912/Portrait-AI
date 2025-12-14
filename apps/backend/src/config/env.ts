@@ -13,6 +13,8 @@ const envSchema = z.object({
   S3_ACCESS_KEY: z.string().optional(),
   S3_SECRET_KEY: z.string().optional(),
   BUCKET_NAME: z.string().optional(),
+  S3_ENDPOINT: z.string().optional(),
+  STORAGE_PUBLIC_URL: z.string().optional(),
   WEBHOOK_BASE_URL: z.string().optional(),
   REDIS_URL: z.string().optional(),
   SENTRY_DSN: z.string().optional(),
@@ -38,6 +40,15 @@ if (!env.DATABASE_URL) {
   console.warn(
     "⚠️ DATABASE_URL not set. Falling back to local SQLite database (file:./dev.db)"
   );
+}
+
+// Backwards compatibility for legacy ENDPOINT env var
+if (!env.S3_ENDPOINT && process.env.ENDPOINT) {
+  env.S3_ENDPOINT = process.env.ENDPOINT;
+}
+
+if (!env.STORAGE_PUBLIC_URL && process.env.CLOUDFLARE_URL) {
+  env.STORAGE_PUBLIC_URL = process.env.CLOUDFLARE_URL;
 }
 
 export { env };

@@ -1,5 +1,6 @@
 import { fal } from "@fal-ai/client";
 import { env } from "../config/env";
+import { logger } from "../lib/logger";
 
 const TRAINING_WEBHOOK =
   env.WEBHOOK_BASE_URL?.concat("/fal-ai/webhook/train") ?? "";
@@ -8,6 +9,8 @@ const IMAGE_WEBHOOK =
 
 export class FalAIModel {
   async trainModel(zipUrl: string, triggerWord: string) {
+    logger.info({ triggerWord, webhookUrl: TRAINING_WEBHOOK }, "Submitting model training to fal.ai");
+    
     const { request_id, response_url } = await fal.queue.submit(
       "fal-ai/flux-lora-fast-training",
       {
@@ -19,10 +22,13 @@ export class FalAIModel {
       }
     );
 
+    logger.info({ requestId: request_id }, "Model training submitted successfully");
     return { requestId: request_id, responseUrl: response_url };
   }
 
   async generateImage(prompt: string, tensorPath: string) {
+    logger.info({ promptLength: prompt.length, tensorPath }, "Submitting image generation to fal.ai");
+    
     const { request_id, response_url } = await fal.queue.submit(
       "fal-ai/flux-lora",
       {
@@ -34,19 +40,46 @@ export class FalAIModel {
       }
     );
 
+    logger.info({ requestId: request_id }, "Image generation submitted");
     return { requestId: request_id, responseUrl: response_url };
   }
 
-  async generateImageSync(tensorPath: string) {
-    const response = await fal.subscribe("fal-ai/flux-lora", {
-      input: {
-        prompt:
-          "Generate a portrait on a clean white background for preview purposes",
-        loras: [{ path: tensorPath, scale: 1 }],
-      },
-    });
+  async generateImageSync(tensorPath: string): Promise<string> {
+    logger.info({ tensorPath }, "Generating hero preview image synchronously");
+    
+    try {
+      const response = await fal.subscribe("fal-ai/flux-lora", {
+        input: {
+          prompt:
+            "A professional portrait photo of the person, centered, clean white background, high quality, studio lighting, 4k resolution, looking at camera, friendly expression",
+          loras: [{ path: tensorPath, scale: 1 }],
+          num_inference_steps: 28,
+          guidance_scale: 3.5,
+          image_size: "square",
+        },
+      });
 
-    return response.data.images?.[0]?.url ?? "";
+      const imageUrl = (response.data as any)?.images?.[0]?.url ?? "";
+      
+      if (imageUrl) {
+        logger.info({ imageUrl }, "Hero preview image generated successfully");
+      } else {
+        logger.warn({ response: response.data }, "No image URL in response");
+      }
+      
+      return imageUrl;
+    } catch (error) {
+      logger.error({ error, tensorPath }, "Failed to generate hero preview image");
+      throw error;
+    }
+  }
+
+  /**
+   * Regenerate thumbnail for an existing model
+   */
+  async regenerateThumbnail(modelId: string, tensorPath: string): Promise<string> {
+    logger.info({ modelId, tensorPath }, "Regenerating model thumbnail");
+    return this.generateImageSync(tensorPath);
   }
 }
 

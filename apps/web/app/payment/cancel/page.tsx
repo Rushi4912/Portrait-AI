@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { PaymentCancelContent } from "../../../components/payment/PaymentCancelContent";
+import { PaymentCancelContent } from "@/features/payments";
 
 export default function PaymentCancelPage() {
   return (
