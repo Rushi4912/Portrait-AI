@@ -1,89 +1,211 @@
-# Turborepo starter
+# 🌙 Storybook AI  
+AI-powered personalized bedtime stories for kids
 
-This Turborepo starter is maintained by the Turborepo core team.
+Storybook AI is a production-grade SaaS platform that generates personalized bedtime stories for children using AI.  
+Each child becomes the hero of their own story through custom **FLUX LoRA training**, with consistent characters, illustrations, and narrated audio.
 
-## Requirements
+The platform is built as a **TurboRepo monorepo**, with a modern SaaS dashboard, scalable backend, and AI services designed for real-world production use.
 
-- Node.js >= 22.11.0 (latest LTS)
-- npm >= 10.8 (bundled with Node 22)
+---
 
-## Using this example
+## ✨ Features
 
-Run the following command:
+- 🧒 Personalized child heroes using FLUX LoRA training
+- 📖 AI-generated bedtime stories (safe, age-appropriate)
+- 🎨 Illustrated story pages with character consistency
+- 🔊 Story narration using **ElevenLabs** (natural voice TTS)
+- 🧠 Custom prompts and emotion-aware storytelling
+- 🔐 Secure authentication with **Clerk**
+- 📊 Professional SaaS dashboard for parents
+- ☁️ Cloudflare-powered infrastructure
+- 🏗 Production-ready monorepo architecture
 
-```sh
-npx create-turbo@latest
+---
+
+## 🧠 How It Works
+
+1. Parents upload child images
+2. Images are used to train a **FLUX LoRA** model
+3. The trained model represents the child as a story hero
+4. AI generates:
+   - A bedtime story
+   - Matching illustrations
+   - Voice narration via ElevenLabs
+5. Stories are stored and accessible anytime from the dashboard
+
+---
+
+## 🏗 Monorepo Architecture (TurboRepo)
+
+This project uses **TurboRepo** to manage multiple apps and shared packages efficiently.
 ```
-
-## What's inside?
-
-This Turborepo includes the following packages/apps:
-
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-pnpm build
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
-pnpm dev
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+storybook-ai/
+├── apps/
+│ ├── web/ # Next.js frontend (SaaS dashboard)
+│ └── backend/ # Express backend API
+│
+├── packages/
+│ ├── ui/ # Shared UI components (shadcn + Tailwind)
+│ ├── config/ # Shared configs (TS, ESLint, Tailwind)
+│ ├── utils/ # Shared utilities and helpers
+│ └── db/ # Database package
+│ └── prisma/ # Prisma schema & migrations
+│
+├── turbo.json # TurboRepo pipeline configuration
+├── package.json
+└── README.md
 
 ```
-cd my-turborepo
-npx turbo login
+---
+
+## 🛠 Tech Stack
+
+### Frontend (`apps/web`)
+- Next.js (TypeScript)
+- Tailwind CSS
+- shadcn/ui
+- App Router
+- Professional SaaS dashboard layout
+- Responsive and accessible UI
+
+### Backend (`apps/backend`)
+- Node.js
+- Express
+- Prisma ORM
+- PostgreSQL
+- REST-based API architecture
+
+### Authentication
+- Clerk
+
+### AI & Media
+- FLUX LoRA (custom character training)
+- AI text generation for stories
+- AI image generation for illustrations
+- **ElevenLabs** for story narration (Text-to-Speech)
+
+### Infrastructure
+- Cloudflare (CDN, security, edge delivery)
+
+---
+
+## 📊 SaaS Dashboard
+
+The platform includes a professional SaaS dashboard that allows parents to:
+
+- Manage child profiles
+- Upload training images
+- Generate and view stories
+- Listen to narrated bedtime stories
+- Access story history
+- Manage subscriptions (payment-ready architecture)
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js ≥ 18
+- PostgreSQL
+- Clerk account
+- ElevenLabs account
+- Cloudflare account
+- FLUX LoRA training setup
+
+---
+
+### Install Dependencies
+
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+npm install
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+Environment Variables
+
+Create a .env file (or per-app env files):
+
+DATABASE_URL=postgresql://user:password@localhost:5432/storybook
+
+CLERK_SECRET_KEY=your_clerk_secret_key
+CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
+
+ELEVENLABS_API_KEY=your_elevenlabs_api_key
+AI_API_KEY=your_ai_provider_key
+
+CLOUDFLARE_API_TOKEN=your_cloudflare_token
+
+Database Setup
+
+npx prisma migrate deploy
+npx prisma generate
+
+Run the Monorepo
+
+npm run dev
+
+This will start:
+
+    Frontend: apps/web
+
+    Backend API: apps/backend
 
 ```
-npx turbo link
-```
 
-## Useful Links
 
-Learn more about the power of Turborepo:
+## 🧪 Production Readiness
 
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+- Type-safe database access with Prisma  
+- Secure authentication and authorization  
+- TurboRepo-powered builds and caching  
+- AI services isolated from core business logic  
+- CDN-backed frontend delivery  
+- SaaS-ready architecture  
+
+---
+
+## 🔒 Privacy & Safety
+
+- Child images are handled securely  
+- Trained LoRA models are private and isolated  
+- Age-appropriate content filtering  
+- Privacy-first system design  
+
+---
+
+## 📈 Roadmap
+
+- Multi-language story generation  
+- Voice selection and emotional tones (ElevenLabs)  
+- Parent-controlled story customization  
+- Mobile app (React Native)  
+- Offline story downloads  
+- Analytics and usage insights  
+- Community story sharing (opt-in)  
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome.
+
+1. Fork the repository  
+2. Create a new branch  
+3. Commit your changes  
+4. Open a pull request  
+
+Please follow clean code and security best practices.
+
+---
+
+## 📄 License
+
+MIT License
+
+---
+
+## 🌟 Vision
+
+To make bedtime magical, personal, and unforgettable —  
+where every child is the hero of their own story.
+
